@@ -25,7 +25,7 @@ func NewEvent(user, title string, outcomes ...string) (*Event, error) {
 			Title: x,
 		}
 
-		tmp = append(tmp, o)
+		tmp[i] = o
 	}
 
 	event.Outcomes = tmp
