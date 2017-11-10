@@ -67,3 +67,25 @@ func NewMarketWithFund(user string, event *Event, fund float64) (*Market, error)
 
 	return mkt, nil
 }
+
+// NewMarketWithLiquidity ...
+func NewMarketWithLiquidity(user string, event *Event, liquidity float64) (*Market, error) {
+	if liquidity <= 0 {
+		return nil, perrors.Errorf("liquidity must larger than 0: %v", liquidity)
+	}
+
+	len := len(event.Outcomes)
+	if len < 2 {
+		return nil, perrors.Errorf("length of outcomes must larger than 1: %v", len)
+	}
+
+	fund := Fund(liquidity, len)
+
+	mkt := InitMarket(user, event)
+	mkt.Fund = fund
+	mkt.Liquidity = liquidity
+	mkt.Prices = InitPrices(liquidity, mkt.Shares)
+	mkt.Cost = fund
+
+	return mkt, nil
+}
