@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package lmsr;
+
+message Share {
+  string id = 1;
+  string market = 2;
+  string outcome = 3;
+  double volume = 4;
+}
+
+message Price {
+  string share = 1;
+  double price = 2;
+}
+
+message Market {
+  string id = 1;
+  string user = 2;
+  string event = 3;
+  double liquidity = 4;
+  double fund = 5;
+  double cost = 6;
+  repeated Share shares = 7;
+  repeated Price prices = 8;
+  bool settled = 9;
+}

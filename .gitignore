@@ -1,0 +1,43 @@
+# Local build binaries
+*.pyc
+/build/*
+/bin
+.idea
+*.iml
+.DS_Store
+tags
+.tags
+.vagrant/
+/build
+/release/darwin-amd64
+/release/linux-amd64
+/release/linux-s390x
+/release/linux-ppc64le
+/release/windows-amd64
+# Emacs backup files
+*~
+*#
+.#*
+# Vim file artifacts
+.*.sw*
+# bddtest log files
+*.log
+*.cov
+# Makefile dummy artifacts
+.*-dummy
+# go-carpet output files
+go-carpet-coverage*
+# Test result xml files
+report.xml
+results.xml
+TESTS*.xml
+.settings
+.project
+.gradle
+build/
+bin/
+# vscode settings
+.vscode
+*_sk
+*.lock
+vendor/
