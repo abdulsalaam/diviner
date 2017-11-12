@@ -3,7 +3,6 @@ package lmsr
 import (
 	"fmt"
 	"math"
-	"reflect"
 
 	"github.com/google/uuid"
 )
@@ -22,39 +21,6 @@ func prefix(p string) string {
 
 func combine(with string, a, b interface{}) string {
 	return fmt.Sprintf("%v"+with+"%v", a, b)
-}
-
-func foldLeftFloat64(x interface{}, z float64, op func(float64, interface{}) float64) float64 {
-	s := reflect.ValueOf(x)
-	if s.Kind() != reflect.Slice {
-		panic("non-slice type")
-	}
-
-	len := s.Len()
-
-	for i := 0; i < len; i++ {
-		z = op(z, s.Index(i).Interface())
-	}
-
-	return z
-}
-
-func mapFloat64(x interface{}, op func(interface{}) float64) []float64 {
-	s := reflect.ValueOf(x)
-
-	if s.Kind() != reflect.Slice {
-		panic("non-slice type")
-	}
-
-	len := s.Len()
-
-	result := make([]float64, len)
-
-	for i := 0; i < len; i++ {
-		result[i] = op(s.Index(i).Interface())
-	}
-
-	return result
 }
 
 // EventID ...
