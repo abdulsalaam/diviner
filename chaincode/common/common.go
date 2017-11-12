@@ -1,21 +1,12 @@
 package common
 
 import (
+	"diviner/common/cast"
+
 	"github.com/google/uuid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
-
-// StringsToByteArray ...
-func StringsToByteArray(args ...string) [][]byte {
-	result := make([][]byte, len(args))
-
-	for i, x := range args {
-		result[i] = []byte(x)
-	}
-
-	return result
-}
 
 // NewMockStub ...
 func NewMockStub(name string, cc shim.Chaincode) *shim.MockStub {
@@ -29,17 +20,17 @@ func MockInit(stub *shim.MockStub, args ...[]byte) pb.Response {
 
 // MockInitWithString ...
 func MockInitWithString(stub *shim.MockStub, args ...string) pb.Response {
-	tmp := StringsToByteArray(args...)
+	tmp := cast.StringsToByteArray(args...)
 	return MockInit(stub, tmp...)
 }
 
 // MockInvoke ...
-func MockInvoke(stub shim.MockStub, args ...[]byte) pb.Response {
+func MockInvoke(stub *shim.MockStub, args ...[]byte) pb.Response {
 	return stub.MockInvoke(uuid.New().String(), args)
 }
 
 // MockInvokeWithString ...
 func MockInvokeWithString(stub *shim.MockStub, args ...string) pb.Response {
-	tmp := StringsToByteArray(args...)
-	return stub.MockInvoke(uuid.New().String(), tmp)
+	tmp := cast.StringsToByteArray(args...)
+	return MockInvoke(stub, tmp...)
 }

@@ -1,6 +1,7 @@
 package cast
 
 import (
+	"diviner/common/util"
 	"encoding/hex"
 	"math"
 	"testing"
@@ -54,5 +55,26 @@ func TestCast(t *testing.T) {
 
 	if hex.EncodeToString(strBytes) != hex.EncodeToString(strBytes2) {
 		t.Fatal("string not match")
+	}
+}
+
+func TestStringsToByteArray(t *testing.T) {
+	a := "A"
+	b := "B"
+	c := "C"
+
+	ab := []byte(a)
+	bb := []byte(b)
+	cb := []byte(c)
+
+	result := StringsToByteArray(a, b, c)
+	if len(result) != 3 {
+		t.Fatal("length failed")
+	}
+
+	if util.CmpByteArray(result[0], ab) != 0 ||
+		util.CmpByteArray(result[1], bb) != 0 ||
+		util.CmpByteArray(result[2], cb) != 0 {
+		t.Fatal("content failed")
 	}
 }

@@ -35,3 +35,14 @@ func ToBytes(in ...interface{}) ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
+
+// StringsToByteArray ...
+func StringsToByteArray(args ...string) [][]byte {
+	result := make([][]byte, len(args))
+
+	for i, x := range args {
+		result[i] = []byte(x)
+	}
+
+	return result
+}
