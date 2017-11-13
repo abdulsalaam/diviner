@@ -2,9 +2,11 @@ package market
 
 import (
 	"fmt"
+	"strconv"
 
 	ccc "diviner/chaincode/common"
-	pbm "diviner/protos/lmsr"
+	pbl "diviner/protos/lmsr"
+	pbm "diviner/protos/member"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -17,8 +19,61 @@ func NewMarketChaincode() shim.Chaincode {
 	return new(marketCC)
 }
 
-func (mkt *marketCC) create(user, event string, fund bool) pb.Response {
-	return shim.Success(nil)
+func (mkt *marketCC) create(stub shim.ChaincodeStubInterface, user, event string, num float64, isFund bool) pb.Response {
+	mb, existed, err := ccc.GetStateAndCheck(stub, user)
+	if err != nil {
+		return ccc.Errorf("query member (%s) error: %v", user, err)
+	} else if !existed {
+		return ccc.Errorf("member (%s) is not existed", user)
+	}
+
+	mem, err := pbm.Unmarshal(mb)
+	if err != nil {
+		return ccc.Errorf("unmarshal member error: %v", err)
+	}
+
+	eb, existed, err := ccc.GetStateAndCheck(stub, event)
+	if err != nil {
+		return ccc.Errorf("query event (%s) error: %v", event, err)
+	} else if !existed {
+		return ccc.Errorf("event (%s) is not existed", event)
+	}
+
+	evt, err := pbl.UnmarshalEvent(eb)
+	if err != nil {
+		return ccc.Errorf("unmarshal event error: %v", err)
+	}
+
+	var fund float64
+
+	if isFund {
+		fund = num
+	} else {
+		fund = pbl.Fund(num, len(evt.Outcomes))
+	}
+
+	if mem.Balance < fund {
+		return ccc.Errorf("usre balance is not enough, need %v but %v", fund, mem.Balance)
+	}
+
+	var market *pbl.Market
+
+	if isFund {
+		market, err = pbl.NewMarketWithFund(mem.Id, evt, num)
+	} else {
+		market, err = pbl.NewMarketWithLiquidity(mem.Id, evt, num)
+	}
+
+	if err != nil {
+		return ccc.Errorf("new market error: %v", err)
+	}
+
+	bytes, err := pbl.MarshalMarket(market)
+	if err != nil {
+		return ccc.Errorf("marshal market error: %v", err)
+	}
+
+	return ccc.PutStateAndReturn(stub, market.Id, bytes, bytes)
 }
 
 func (mkt *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
@@ -29,7 +84,7 @@ func (mkt *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Respo
 		return ccc.Errorf("market id (%s) is not existed", id)
 	}
 
-	_, err = pbm.UnmarshalMarket(bytes)
+	_, err = pbl.UnmarshalMarket(bytes)
 	if err != nil {
 		return ccc.Errorf("unmarshal data error: %v", err)
 	}
@@ -37,7 +92,7 @@ func (mkt *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Respo
 	return shim.Success(bytes)
 }
 
-func (mkt *marketCC) settled(stub shim.ChaincodeStubInterface, id string) pb.Response {
+func (mkt *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Response {
 	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 	if err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
@@ -45,7 +100,7 @@ func (mkt *marketCC) settled(stub shim.ChaincodeStubInterface, id string) pb.Res
 		return ccc.Errorf("market id (%s) is not existed", id)
 	}
 
-	market, err := pbm.UnmarshalMarket(bytes)
+	market, err := pbl.UnmarshalMarket(bytes)
 	if err != nil {
 		return ccc.Errorf("unmarshal data error: %v", err)
 	}
@@ -56,7 +111,7 @@ func (mkt *marketCC) settled(stub shim.ChaincodeStubInterface, id string) pb.Res
 
 	market.Settled = true
 
-	bytes2, err := pbm.MarshalMarket(market)
+	bytes2, err := pbl.MarshalMarket(market)
 	if err != nil {
 		return ccc.Errorf("marshal data error: %v", err)
 	}
@@ -71,7 +126,43 @@ func (mkt *marketCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Invoke ...
 func (mkt *marketCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	return shim.Success(nil)
+	fcn, params := stub.GetFunctionAndParameters()
+	len := len(params)
+	switch fcn {
+	case "create":
+		if len != 4 {
+			return ccc.Errorf("args length error for create: %v", len)
+		}
+
+		flag := params[0]
+		if flag != "fund" && flag != "liquidity" {
+			return ccc.Errorf("flag must be `fund` or `liquidity`: %s", flag)
+		}
+
+		num, err := strconv.ParseFloat(params[3], 64)
+		if err != nil {
+			return ccc.Errorf("num must be float64: %s", params[3])
+		}
+
+		user := params[1]
+		event := params[2]
+
+		return mkt.create(stub, user, event, num, flag == "fund")
+
+	case "query":
+		if len != 1 {
+			return ccc.Errorf("args length error for query: %v", len)
+		}
+		return mkt.query(stub, params[0])
+	case "settle":
+		if len != 1 {
+			return ccc.Errorf("args length error for settle: %v", len)
+		}
+
+		return mkt.settle(stub, params[0])
+	}
+
+	return ccc.Errorf("unknown function: %s", fcn)
 }
 
 func main() {
