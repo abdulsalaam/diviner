@@ -17,7 +17,7 @@ func TestCast(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pi2, err := ToFloat64(bytes)
+	pi2, err := BytesToFloat64(bytes)
 	if err != nil {
 		t.Fatal(err)
 	}

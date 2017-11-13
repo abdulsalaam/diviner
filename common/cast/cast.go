@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 )
 
-// ToFloat64 cast byte array to float64
-func ToFloat64(in []byte) (float64, error) {
+// BytesToFloat64 cast byte array to float64
+func BytesToFloat64(in []byte) (float64, error) {
 	var ret float64
 	buf := bytes.NewReader(in)
 	err := binary.Read(buf, binary.LittleEndian, &ret)
