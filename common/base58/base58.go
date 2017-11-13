@@ -1,6 +1,7 @@
 package base58
 
 import (
+	"errors"
 	"math/big"
 
 	"github.com/hyperledger/fabric/bccsp"
@@ -110,8 +111,11 @@ func Encode(b []byte) string {
 	return string(answer)
 }
 
-// Base58Address get a base58 address from public key
-func Base58Address(pub bccsp.Key) (string, error) {
+// Address get a base58 address from public key
+func Address(pub bccsp.Key) (string, error) {
+	if pub.Private() {
+		return "", errors.New("pub must be public key")
+	}
 	bytes, err := pub.Bytes()
 	if err != nil {
 		return "", err

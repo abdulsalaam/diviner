@@ -10,4 +10,9 @@ func TestNewEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	_, err = NewEvent(user, title, "a")
+	if err == nil {
+		t.Fatal("can not new an event with one outcome")
+	}
 }

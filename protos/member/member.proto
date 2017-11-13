@@ -8,9 +8,8 @@ import "google/protobuf/timestamp.proto";
 
 message Member {
   string id = 1;
-  string email = 2;
-  string address = 3;
-  double balance = 4;
+  string address = 2;
+  double balance = 3;
 }
 
 message MemberCreateRequest {

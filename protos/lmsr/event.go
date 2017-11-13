@@ -1,6 +1,7 @@
 package lmsr
 
 import (
+	"github.com/gogo/protobuf/proto"
 	perrors "github.com/pkg/errors"
 )
 
@@ -31,4 +32,16 @@ func NewEvent(user, title string, outcomes ...string) (*Event, error) {
 	event.Outcomes = tmp
 
 	return event, nil
+}
+
+// UnmarshalEvent ...
+func UnmarshalEvent(data []byte) (*Event, error) {
+	evt := &Event{}
+	err := proto.Unmarshal(data, evt)
+	return evt, err
+}
+
+// MarshalEvent ...
+func MarshalEvent(e *Event) ([]byte, error) {
+	return proto.Marshal(e)
 }

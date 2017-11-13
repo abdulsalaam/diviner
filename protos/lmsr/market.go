@@ -1,7 +1,7 @@
 package lmsr
 
 import (
-	"diviner/common/monad"
+	"diviner/common/util"
 
 	perrors "github.com/pkg/errors"
 )
@@ -26,8 +26,13 @@ func InitShares(mkt string, outcomes []*Outcome) []*Share {
 
 // InitPrices ...
 func InitPrices(liquidity float64, shares []*Share) []*Price {
-	sum, ok := monad.FoldLeftFloat64(shares, 0.0, func(a float64, b interface{}) float64 {
-		return a + Exp(liquidity, b.(*Share).Volume)
+	sum, ok := util.FoldLeftFloat64(shares, 0.0, func(a float64, b interface{}) (float64, bool) {
+		switch b.(type) {
+		case *Share:
+			return a + Exp(liquidity, b.(*Share).Volume), true
+		default:
+			return 0.0, false
+		}
 	})
 
 	if !ok {

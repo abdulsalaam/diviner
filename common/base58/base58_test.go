@@ -1,6 +1,9 @@
 package base58
 
-import "testing"
+import (
+	"diviner/common/csp"
+	"testing"
+)
 
 var testdata = [][]string{
 	{"hello", "Cn8eVZg"},
@@ -24,5 +27,15 @@ func TestDecode(t *testing.T) {
 		if x[0] != string(bytes) {
 			t.Fatalf("decoding error: %q", x[0])
 		}
+	}
+}
+
+func TestPubKeyToAddress(t *testing.T) {
+	priv, _ := csp.GeneratePrivateTempKey()
+	pub, _ := priv.PublicKey()
+
+	_, err := Address(pub)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
