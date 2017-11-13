@@ -20,6 +20,9 @@ func NewMarketChaincode() shim.Chaincode {
 }
 
 func (mkt *marketCC) create(stub shim.ChaincodeStubInterface, user, event string, num float64, isFund bool) pb.Response {
+	if stub == nil {
+		fmt.Println("stub is nil")
+	}
 	mb, existed, err := ccc.GetStateAndCheck(stub, user)
 	if err != nil {
 		return ccc.Errorf("query member (%s) error: %v", user, err)
@@ -66,6 +69,17 @@ func (mkt *marketCC) create(stub shim.ChaincodeStubInterface, user, event string
 
 	if err != nil {
 		return ccc.Errorf("new market error: %v", err)
+	}
+
+	mem.Balance -= market.Fund
+
+	mb, err = pbm.Marshal(mem)
+	if err != nil {
+		return ccc.Errorf("marshal member error: %v", err)
+	}
+
+	if err := stub.PutState(mem.Id, mb); err != nil {
+		return ccc.Errorf("update member balance error: %v", err)
 	}
 
 	bytes, err := pbl.MarshalMarket(market)

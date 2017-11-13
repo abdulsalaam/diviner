@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 
 func TestQueryMember(t *testing.T) {
 	resp := ccc.MockInvoke(stub, query, []byte("abc"))
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Fatal("can not query non-existed id")
 	}
 }
@@ -48,12 +48,12 @@ func TestCreateMember(t *testing.T) {
 	b2, _ := pbm.Marshal(m2)
 
 	resp := ccc.MockInvoke(stub, create, b1)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("create membe failed: %v\n", resp.Message)
 	}
 
 	resp = ccc.MockInvoke(stub, create, b2)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("create membe failed: %v\n", resp.Message)
 	}
 
@@ -72,7 +72,7 @@ func TestCreateMember(t *testing.T) {
 	}
 
 	resp = ccc.MockInvoke(stub, create, b1)
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Fatal("can not create an existed member")
 	}
 }
@@ -80,19 +80,19 @@ func TestCreateMember(t *testing.T) {
 func TestUpdateMember(t *testing.T) {
 	b3, _ := pbm.Marshal(m3)
 	resp := ccc.MockInvoke(stub, update, b3)
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Fatal("can not update an non-existed member")
 	}
 
 	m1.Balance = 1000.0
 	b1, _ := pbm.Marshal(m1)
 	resp = ccc.MockInvoke(stub, update, b1)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("update error: %v", resp.Message)
 	}
 
 	resp = ccc.MockInvoke(stub, query, []byte(m1.Id))
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("query error: %v", resp.Message)
 	}
 

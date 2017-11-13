@@ -36,13 +36,12 @@ func TestMain(m *testing.M) {
 
 	user = m1.Id
 
-	ccc.MockInit(stub)
 	m.Run()
 }
 
 func TestCreate(t *testing.T) {
 	resp := ccc.MockInvokeWithString(stub, create, user, title, outcomes[0], outcomes[1])
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("create event failed: %s", resp.Message)
 	}
 
@@ -70,17 +69,17 @@ func TestCreate(t *testing.T) {
 	}
 
 	resp = ccc.MockInvokeWithString(stub, query, event.Id)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatal("query event failed")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, query, "abc")
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Fatal("can not query non-existed event")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, approve, event.Id)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatal("approve failed")
 	}
 
@@ -95,7 +94,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	resp = ccc.MockInvokeWithString(stub, query, event.Id)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatal("query event failed")
 	}
 

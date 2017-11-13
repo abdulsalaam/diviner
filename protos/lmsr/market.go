@@ -71,6 +71,10 @@ func NewMarketWithFund(user string, event *Event, fund float64) (*Market, error)
 		return nil, perrors.Errorf("fund must larger than 0: %v", fund)
 	}
 
+	if event.Approved {
+		return nil, perrors.Errorf("event is approved")
+	}
+
 	mkt := InitMarket(user, event)
 	mkt.Fund = fund
 	mkt.Liquidity = Liquidity(fund, len(event.Outcomes))
@@ -84,6 +88,10 @@ func NewMarketWithFund(user string, event *Event, fund float64) (*Market, error)
 func NewMarketWithLiquidity(user string, event *Event, liquidity float64) (*Market, error) {
 	if liquidity <= 0 {
 		return nil, perrors.Errorf("liquidity must larger than 0: %v", liquidity)
+	}
+
+	if event.Approved {
+		return nil, perrors.Errorf("event is approved")
 	}
 
 	len := len(event.Outcomes)
@@ -100,6 +108,36 @@ func NewMarketWithLiquidity(user string, event *Event, liquidity float64) (*Mark
 	mkt.Cost = fund
 
 	return mkt, nil
+}
+
+// CmpMarket ...
+func CmpMarket(m1, m2 *Market) bool {
+	if m1.Id != m2.Id || m1.User != m2.User || m1.Event != m2.Event ||
+		m1.Liquidity != m2.Liquidity || m1.Fund != m2.Fund || m1.Cost != m2.Cost || m1.Settled != m2.Settled {
+		return false
+	}
+
+	if len(m1.Shares) != len(m2.Shares) {
+		return false
+	}
+
+	if len(m1.Prices) != len(m2.Prices) {
+		return false
+	}
+
+	for i := range m1.Shares {
+		if *(m1.Shares[i]) != *(m2.Shares[i]) {
+			return false
+		}
+	}
+
+	for i := range m1.Prices {
+		if *(m1.Prices[i]) != *(m2.Prices[i]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // UnmarshalMarket ...

@@ -62,3 +62,8 @@ func PutStateAndReturn(stub shim.ChaincodeStubInterface, key string, value, payl
 
 	return shim.Success(payload)
 }
+
+// OK ...
+func OK(resp *pb.Response) bool {
+	return resp.Status == shim.OK
+}
