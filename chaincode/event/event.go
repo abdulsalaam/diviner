@@ -13,6 +13,11 @@ import (
 
 type eventCC struct{}
 
+// NewEventChaincode ...
+func NewEventChaincode() shim.Chaincode {
+	return new(eventCC)
+}
+
 func (evt *eventCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
 
 	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
@@ -40,12 +45,12 @@ func (evt *eventCC) create(stub shim.ChaincodeStubInterface, user, title string,
 		return ccc.Errorf("title is empty")
 	}
 
-	/*_, existed, err := ccc.GetStateAndCheck(stub, user)
+	_, existed, err := ccc.GetStateAndCheck(stub, user)
 	if err != nil {
 		return ccc.Errorf("query user (%s) error: %v", user, err)
 	} else if !existed {
 		return ccc.Errorf("user is not existed (%s)", user)
-	}*/
+	}
 
 	event, err := pbe.NewEvent(user, title, outcomes...)
 	if err != nil {
@@ -116,7 +121,7 @@ func (evt *eventCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 func main() {
-	err := shim.Start(new(eventCC))
+	err := shim.Start(NewEventChaincode())
 
 	if err != nil {
 		fmt.Printf("creating member chaincode failed: %v", err)

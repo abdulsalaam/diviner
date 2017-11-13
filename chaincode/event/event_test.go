@@ -2,9 +2,12 @@ package event
 
 import (
 	ccc "diviner/chaincode/common"
+	"diviner/common/csp"
 	pbe "diviner/protos/lmsr"
+	pbm "diviner/protos/member"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -19,7 +22,20 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	stub = ccc.NewMockStub("event", new(eventCC))
+	stub = ccc.NewMockStub("event", NewEventChaincode())
+	ccc.MockInit(stub, nil)
+
+	priv, _ := csp.GeneratePrivateTempKey()
+	m1, _ := pbm.NewMember(priv, 0.0)
+	b1, _ := pbm.Marshal(m1)
+
+	txid := uuid.New().String()
+	stub.MockTransactionStart(txid)
+	stub.PutState(m1.Id, b1)
+	stub.MockTransactionEnd(txid)
+
+	user = m1.Id
+
 	ccc.MockInit(stub)
 	m.Run()
 }
@@ -27,7 +43,7 @@ func TestMain(m *testing.M) {
 func TestCreate(t *testing.T) {
 	resp := ccc.MockInvokeWithString(stub, create, user, title, outcomes[0], outcomes[1])
 	if resp.Status != shim.OK {
-		t.Fatal("create event failed: %s", resp.Message)
+		t.Fatalf("create event failed: %s", resp.Message)
 	}
 
 	event, err := pbe.UnmarshalEvent(resp.Payload)
@@ -92,6 +108,11 @@ func TestCreate(t *testing.T) {
 
 func TestWrongParameter(t *testing.T) {
 	resp := ccc.MockInvokeWithString(stub, query)
+	if resp.Status == shim.OK {
+		t.Error("wrong parameters must be failed")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, create, "a", "b", "c", "d")
 	if resp.Status == shim.OK {
 		t.Error("wrong parameters must be failed")
 	}

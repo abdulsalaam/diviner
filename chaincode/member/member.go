@@ -13,6 +13,11 @@ import (
 // MemberCC ...
 type memberCC struct{}
 
+// NewMemberChaincode ...
+func NewMemberChaincode() shim.Chaincode {
+	return new(memberCC)
+}
+
 func (mem *memberCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
 	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 	if err != nil {
@@ -87,7 +92,7 @@ func (mem *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 func main() {
-	err := shim.Start(new(memberCC))
+	err := shim.Start(NewMemberChaincode())
 
 	if err != nil {
 		fmt.Printf("creating member chaincode failed: %v", err)

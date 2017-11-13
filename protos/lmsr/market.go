@@ -3,6 +3,7 @@ package lmsr
 import (
 	"diviner/common/util"
 
+	"github.com/gogo/protobuf/proto"
 	perrors "github.com/pkg/errors"
 )
 
@@ -99,4 +100,16 @@ func NewMarketWithLiquidity(user string, event *Event, liquidity float64) (*Mark
 	mkt.Cost = fund
 
 	return mkt, nil
+}
+
+// UnmarshalMarket ...
+func UnmarshalMarket(data []byte) (*Market, error) {
+	mkt := &Market{}
+	err := proto.Unmarshal(data, mkt)
+	return mkt, err
+}
+
+// MarshalMarket ...
+func MarshalMarket(m *Market) ([]byte, error) {
+	return proto.Marshal(m)
 }

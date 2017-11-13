@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 	m1, _ = pbm.NewMember(priv1, 0.0)
 	m2, _ = pbm.NewMember(priv2, 10.0)
 	m3, _ = pbm.NewMember(priv3, 1000.0)
-	stub = ccc.NewMockStub("member", new(memberCC))
+	stub = ccc.NewMockStub("member", NewMemberChaincode())
 
 	ccc.MockInit(stub)
 
