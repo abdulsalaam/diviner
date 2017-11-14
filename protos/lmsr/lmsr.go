@@ -3,6 +3,8 @@ package lmsr
 import (
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -41,6 +43,34 @@ func OutcomeID(evt string, index int) string {
 // ShareID ...
 func ShareID(mkt, outcome string) string {
 	return combine(w, mkt, outcome)
+}
+
+func sep(str, sep string) (string, string, bool) {
+	tmp := strings.Split(str, sep)
+	if len(tmp) > 1 {
+		return tmp[0], strings.Join(tmp[1:], sep), true
+	}
+	return "", "", false
+}
+
+// SepShareID ...
+func SepShareID(id string) (string, string, bool) {
+	return sep(id, w)
+}
+
+// SepOutcomeID ...
+func SepOutcomeID(id string) (string, int, bool) {
+	s1, s2, ok := sep(id, w)
+	if !ok {
+		return "", 0, false
+	}
+
+	idx, err := strconv.ParseInt(s2, 10, 32)
+	if err != nil {
+		return "", 0, false
+	}
+
+	return s1, int(idx), true
 }
 
 // Fund ...
