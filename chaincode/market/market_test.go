@@ -9,7 +9,6 @@ import (
 	pbm "diviner/protos/member"
 
 	"github.com/google/uuid"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 var (
@@ -45,14 +44,14 @@ func TestMain(m *testing.M) {
 
 func TestCreateWithFund(t *testing.T) {
 	resp := ccc.MockInvokeWithString(stub, "create", "fund", member.Id, event.Id, "100.0")
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("create market failed: %s", resp.Message)
 	}
 
 	mkt, _ := pbl.UnmarshalMarket(resp.Payload)
 
 	resp = ccc.MockInvokeWithString(stub, "query", mkt.Id)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatal("query market failed")
 	}
 
@@ -82,14 +81,14 @@ func TestCreateWithFund(t *testing.T) {
 
 func TestCreateWithLiquidity(t *testing.T) {
 	resp := ccc.MockInvokeWithString(stub, "create", "liquidity", member.Id, event.Id, "100.0")
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatalf("create market failed: %s", resp.Message)
 	}
 
 	mkt, _ := pbl.UnmarshalMarket(resp.Payload)
 
 	resp = ccc.MockInvokeWithString(stub, "query", mkt.Id)
-	if resp.Status != shim.OK {
+	if !ccc.OK(&resp) {
 		t.Fatal("query market failed")
 	}
 

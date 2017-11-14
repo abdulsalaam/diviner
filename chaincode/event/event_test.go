@@ -84,12 +84,12 @@ func TestCreate(t *testing.T) {
 	}
 
 	resp = ccc.MockInvokeWithString(stub, approve, event.Id)
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Fatal("can not approve an approved event")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, approve, "abc")
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Fatal("can not approve an non-existed event")
 	}
 
@@ -107,27 +107,27 @@ func TestCreate(t *testing.T) {
 
 func TestWrongParameter(t *testing.T) {
 	resp := ccc.MockInvokeWithString(stub, query)
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Error("wrong parameters must be failed")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, create, "a", "b", "c", "d")
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Error("wrong parameters must be failed")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, create, "a", "b", "c")
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Error("wrong parameters must be failed")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, approve, "a", "b", "c")
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Error("wrong parameters must be failed")
 	}
 
 	resp = ccc.MockInvokeWithString(stub, "test", "a", "b", "c")
-	if resp.Status == shim.OK {
+	if ccc.OK(&resp) {
 		t.Error("wrong parameters must be failed")
 	}
 }
