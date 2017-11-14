@@ -22,7 +22,7 @@ type Share struct {
 func (m *Share) Reset()                    { *m = Share{} }
 func (m *Share) String() string            { return proto.CompactTextString(m) }
 func (*Share) ProtoMessage()               {}
-func (*Share) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (*Share) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
 
 func (m *Share) GetId() string {
 	if m != nil {
@@ -60,7 +60,7 @@ type Price struct {
 func (m *Price) Reset()                    { *m = Price{} }
 func (m *Price) String() string            { return proto.CompactTextString(m) }
 func (*Price) ProtoMessage()               {}
-func (*Price) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (*Price) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
 
 func (m *Price) GetShare() string {
 	if m != nil {
@@ -91,7 +91,7 @@ type Market struct {
 func (m *Market) Reset()                    { *m = Market{} }
 func (m *Market) String() string            { return proto.CompactTextString(m) }
 func (*Market) ProtoMessage()               {}
-func (*Market) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (*Market) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
 
 func (m *Market) GetId() string {
 	if m != nil {
@@ -162,9 +162,9 @@ func init() {
 	proto.RegisterType((*Market)(nil), "lmsr.Market")
 }
 
-func init() { proto.RegisterFile("lmsr/market.proto", fileDescriptor1) }
+func init() { proto.RegisterFile("lmsr/market.proto", fileDescriptor2) }
 
-var fileDescriptor1 = []byte{
+var fileDescriptor2 = []byte{
 	// 264 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x91, 0xcf, 0x4a, 0xc4, 0x30,
 	0x10, 0xc6, 0x49, 0xb7, 0xed, 0x6e, 0x67, 0x41, 0x30, 0x88, 0xe4, 0xe0, 0xa1, 0xd4, 0x4b, 0x4f,

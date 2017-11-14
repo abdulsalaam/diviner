@@ -10,7 +10,11 @@ import (
 )
 
 const (
-	w = "#"
+	// Sep ...
+	Sep = "#"
+
+	// MarketKey ...
+	MarketKey = "eid~mid"
 )
 
 func id() string {
@@ -27,22 +31,28 @@ func combine(with string, a, b interface{}) string {
 
 // EventID ...
 func EventID() string {
-	return prefix("evt-")
+	return prefix("")
 }
 
 // MarketID ...
-func MarketID() string {
-	return prefix("mkt-")
+func MarketID(evt string) string {
+	mkt := id()
+	return combine(Sep, evt, mkt)
 }
 
 // OutcomeID ...
 func OutcomeID(evt string, index int) string {
-	return combine(w, evt, index)
+	return combine(Sep, evt, index)
 }
 
 // ShareID ...
 func ShareID(mkt, outcome string) string {
-	return combine(w, mkt, outcome)
+	return combine(Sep, mkt, outcome)
+}
+
+// AssetID ...
+func AssetID(user, share string) string {
+	return combine(Sep, share, user)
 }
 
 func sep(str, sep string) (string, string, bool) {
@@ -55,12 +65,12 @@ func sep(str, sep string) (string, string, bool) {
 
 // SepShareID ...
 func SepShareID(id string) (string, string, bool) {
-	return sep(id, w)
+	return sep(id, Sep)
 }
 
 // SepOutcomeID ...
 func SepOutcomeID(id string) (string, int, bool) {
-	s1, s2, ok := sep(id, w)
+	s1, s2, ok := sep(id, Sep)
 	if !ok {
 		return "", 0, false
 	}

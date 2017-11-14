@@ -28,6 +28,7 @@ func NewMember(priv bccsp.Key, balance float64) (*Member, error) {
 		Id:      addr,
 		Address: addr,
 		Balance: balance,
+		Assets:  make(map[string]float64),
 	}, nil
 }
 

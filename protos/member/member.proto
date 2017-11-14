@@ -10,6 +10,7 @@ message Member {
   string id = 1;
   string address = 2;
   double balance = 3;
+  map<string, double> assets = 4;
 }
 
 message MemberCreateRequest {

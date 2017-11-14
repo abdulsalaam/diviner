@@ -55,7 +55,7 @@ func InitPrices(liquidity float64, shares []*Share) []*Price {
 // InitMarket ...
 func InitMarket(user string, event *Event) *Market {
 	mkt := &Market{
-		Id:      MarketID(),
+		Id:      MarketID(event.Id),
 		Event:   event.Id,
 		User:    user,
 		Settled: false,

@@ -52,7 +52,7 @@ func TestCreateWithFund(t *testing.T) {
 
 	resp = ccc.MockInvokeWithString(stub, "query", mkt.Id)
 	if !ccc.OK(&resp) {
-		t.Fatal("query market failed")
+		t.Fatalf("query market failed: %s", resp.Message)
 	}
 
 	mkt2, _ := pbl.UnmarshalMarket(resp.Payload)
@@ -89,7 +89,7 @@ func TestCreateWithLiquidity(t *testing.T) {
 
 	resp = ccc.MockInvokeWithString(stub, "query", mkt.Id)
 	if !ccc.OK(&resp) {
-		t.Fatal("query market failed")
+		t.Fatalf("query market failed: %s", resp.Message)
 	}
 
 	mkt2, _ := pbl.UnmarshalMarket(resp.Payload)

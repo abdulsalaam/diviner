@@ -19,10 +19,7 @@ func NewMarketChaincode() shim.Chaincode {
 	return new(marketCC)
 }
 
-func (mkt *marketCC) create(stub shim.ChaincodeStubInterface, user, event string, num float64, isFund bool) pb.Response {
-	if stub == nil {
-		fmt.Println("stub is nil")
-	}
+func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string, num float64, isFund bool) pb.Response {
 	mb, existed, err := ccc.GetStateAndCheck(stub, user)
 	if err != nil {
 		return ccc.Errorf("query member (%s) error: %v", user, err)
@@ -87,15 +84,46 @@ func (mkt *marketCC) create(stub shim.ChaincodeStubInterface, user, event string
 		return ccc.Errorf("marshal market error: %v", err)
 	}
 
-	return ccc.PutStateAndReturn(stub, market.Id, bytes, bytes)
+	key, err := stub.CreateCompositeKey(pbl.MarketKey, []string{market.Id})
+	if err != nil {
+		return ccc.Errorf("create composite key error: %v", err)
+	}
+
+	return ccc.PutStateAndReturn(stub, key, bytes, bytes)
 }
 
-func (mkt *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
+func (cc *marketCC) find(stub shim.ChaincodeStubInterface, id string) ([]byte, error) {
+	it, err := stub.GetStateByPartialCompositeKey(pbl.MarketKey, []string{id})
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer it.Close()
+
+	if !it.HasNext() {
+		return nil, fmt.Errorf("market %s not found", id)
+	}
+
+	result, err := it.Next()
+	if err != nil {
+		return nil, fmt.Errorf("next error: %v", err)
+	}
+
+	return result.Value, nil
+}
+
+func (cc *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
+	/*bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 	if err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
 	} else if !existed {
 		return ccc.Errorf("market id (%s) is not existed", id)
+	}*/
+
+	bytes, err := cc.find(stub, id)
+	if err != nil {
+		return ccc.Errorf("query market (%s) error: %v", id, err)
 	}
 
 	_, err = pbl.UnmarshalMarket(bytes)
@@ -106,12 +134,16 @@ func (mkt *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Respo
 	return shim.Success(bytes)
 }
 
-func (mkt *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
+func (cc *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Response {
+	/*bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 	if err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
 	} else if !existed {
 		return ccc.Errorf("market id (%s) is not existed", id)
+	}*/
+	bytes, err := cc.find(stub, id)
+	if err != nil {
+		return ccc.Errorf("query market (%s) error: %v", id, err)
 	}
 
 	market, err := pbl.UnmarshalMarket(bytes)
@@ -130,16 +162,21 @@ func (mkt *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Resp
 		return ccc.Errorf("marshal data error: %v", err)
 	}
 
-	return ccc.PutStateAndReturn(stub, id, bytes2, nil)
+	key, err := stub.CreateCompositeKey(pbl.MarketKey, []string{market.Id})
+	if err != nil {
+		return ccc.Errorf("create composite key error: %v", err)
+	}
+
+	return ccc.PutStateAndReturn(stub, key, bytes2, nil)
 }
 
 // Init ...
-func (mkt *marketCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
+func (cc *marketCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(nil)
 }
 
 // Invoke ...
-func (mkt *marketCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+func (cc *marketCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	fcn, params := stub.GetFunctionAndParameters()
 	len := len(params)
 	switch fcn {
@@ -161,19 +198,19 @@ func (mkt *marketCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		user := params[1]
 		event := params[2]
 
-		return mkt.create(stub, user, event, num, flag == "fund")
+		return cc.create(stub, user, event, num, flag == "fund")
 
 	case "query":
 		if len != 1 {
 			return ccc.Errorf("args length error for query: %v", len)
 		}
-		return mkt.query(stub, params[0])
+		return cc.query(stub, params[0])
 	case "settle":
 		if len != 1 {
 			return ccc.Errorf("args length error for settle: %v", len)
 		}
 
-		return mkt.settle(stub, params[0])
+		return cc.settle(stub, params[0])
 	}
 
 	return ccc.Errorf("unknown function: %s", fcn)
