@@ -2,7 +2,6 @@ package common
 
 import (
 	"diviner/common/cast"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -34,36 +33,4 @@ func MockInvoke(stub *shim.MockStub, args ...[]byte) pb.Response {
 func MockInvokeWithString(stub *shim.MockStub, args ...string) pb.Response {
 	tmp := cast.StringsToByteArray(args...)
 	return MockInvoke(stub, tmp...)
-}
-
-// Errorf ...
-func Errorf(format string, a ...interface{}) pb.Response {
-	return shim.Error(fmt.Sprintf(format, a))
-}
-
-// Errore ...
-func Errore(err error) pb.Response {
-	return shim.Error(err.Error())
-}
-
-// GetStateAndCheck ...
-func GetStateAndCheck(stub shim.ChaincodeStubInterface, key string) ([]byte, bool, error) {
-	bytes, err := stub.GetState(key)
-
-	return bytes, bytes != nil && err == nil, err
-}
-
-// PutStateAndReturn ...
-func PutStateAndReturn(stub shim.ChaincodeStubInterface, key string, value, payload []byte) pb.Response {
-	err := stub.PutState(key, value)
-	if err != nil {
-		return Errorf("put key (%s) error: %v", key, value)
-	}
-
-	return shim.Success(payload)
-}
-
-// OK ...
-func OK(resp *pb.Response) bool {
-	return resp.Status == shim.OK
 }

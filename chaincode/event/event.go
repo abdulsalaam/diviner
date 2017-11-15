@@ -20,12 +20,9 @@ func NewEventChaincode() shim.Chaincode {
 
 func (evt *eventCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
 
-	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
-
+	bytes, err := ccc.Find(stub, id)
 	if err != nil {
-		return ccc.Errorf("query event (%s) error: %v", id, err)
-	} else if !existed {
-		return ccc.Errorf("event id (%s) is not existed", id)
+		return ccc.Errore(err)
 	}
 
 	_, err = pbe.UnmarshalEvent(bytes)
@@ -45,11 +42,9 @@ func (evt *eventCC) create(stub shim.ChaincodeStubInterface, user, title string,
 		return ccc.Errorf("title is empty")
 	}
 
-	_, existed, err := ccc.GetStateAndCheck(stub, user)
+	_, err := ccc.Find(stub, user)
 	if err != nil {
-		return ccc.Errorf("query user (%s) error: %v", user, err)
-	} else if !existed {
-		return ccc.Errorf("user is not existed (%s)", user)
+		return ccc.Errore(err)
 	}
 
 	event, err := pbe.NewEvent(user, title, outcomes...)
@@ -66,11 +61,9 @@ func (evt *eventCC) create(stub shim.ChaincodeStubInterface, user, title string,
 }
 
 func (evt *eventCC) approve(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
+	bytes, err := ccc.Find(stub, id)
 	if err != nil {
-		return ccc.Errorf("query event (%s) error: %v", id, err)
-	} else if !existed {
-		return ccc.Errorf("event id (%s) is not existed", id)
+		return ccc.Errore(err)
 	}
 
 	event, err := pbe.UnmarshalEvent(bytes)

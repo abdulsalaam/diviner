@@ -1,7 +1,7 @@
 package lmsr
 
 import (
-	"github.com/gogo/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	perrors "github.com/pkg/errors"
 )
 

@@ -3,7 +3,7 @@ package member
 import (
 	"diviner/common/base58"
 
-	"github.com/gogo/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/bccsp"
 	perrors "github.com/pkg/errors"
 )

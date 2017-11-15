@@ -1,56 +1,11 @@
 package lmsr
 
 import (
-	"diviner/common/util"
+	"math"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	perrors "github.com/pkg/errors"
 )
-
-// InitShares ...
-func InitShares(mkt string, outcomes []*Outcome) []*Share {
-	shares := make([]*Share, len(outcomes))
-
-	for i, x := range outcomes {
-		s := &Share{
-			Id:      ShareID(mkt, x.Id),
-			Market:  mkt,
-			Outcome: x.Id,
-			Volume:  0.0,
-		}
-
-		shares[i] = s
-	}
-
-	return shares
-}
-
-// InitPrices ...
-func InitPrices(liquidity float64, shares []*Share) []*Price {
-	sum, ok := util.FoldLeftFloat64(shares, 0.0, func(a float64, b interface{}) (float64, bool) {
-		switch b.(type) {
-		case *Share:
-			return a + Exp(liquidity, b.(*Share).Volume), true
-		default:
-			return 0.0, false
-		}
-	})
-
-	if !ok {
-		return nil
-	}
-
-	result := make([]*Price, len(shares))
-
-	for i, x := range shares {
-		result[i] = &Price{
-			Share: x.Id,
-			Price: Exp(liquidity, x.Volume) / sum,
-		}
-	}
-
-	return result
-}
 
 // InitMarket ...
 func InitMarket(user string, event *Event) *Market {
@@ -58,10 +13,15 @@ func InitMarket(user string, event *Event) *Market {
 		Id:      MarketID(event.Id),
 		Event:   event.Id,
 		User:    user,
+		Shares:  make(map[string]float64),
 		Settled: false,
 	}
 
-	mkt.Shares = InitShares(mkt.Id, event.Outcomes)
+	for _, x := range event.Outcomes {
+		id := ShareID(mkt.Id, x.Id)
+		mkt.Shares[id] = 0.0
+	}
+
 	return mkt
 }
 
@@ -79,7 +39,7 @@ func NewMarketWithFund(user string, event *Event, fund float64) (*Market, error)
 	mkt.Fund = fund
 	mkt.Liquidity = Liquidity(fund, len(event.Outcomes))
 	mkt.Cost = fund
-	mkt.Prices = InitPrices(mkt.Liquidity, mkt.Shares)
+	Reprices(mkt)
 
 	return mkt, nil
 }
@@ -104,8 +64,8 @@ func NewMarketWithLiquidity(user string, event *Event, liquidity float64) (*Mark
 	mkt := InitMarket(user, event)
 	mkt.Fund = fund
 	mkt.Liquidity = liquidity
-	mkt.Prices = InitPrices(liquidity, mkt.Shares)
 	mkt.Cost = fund
+	Reprices(mkt)
 
 	return mkt, nil
 }
@@ -125,19 +85,81 @@ func CmpMarket(m1, m2 *Market) bool {
 		return false
 	}
 
-	for i := range m1.Shares {
-		if *(m1.Shares[i]) != *(m2.Shares[i]) {
+	for k, v1 := range m1.Shares {
+		v2, ok := m2.Shares[k]
+		if !ok {
+			return false
+		}
+
+		if v1 != v2 {
 			return false
 		}
 	}
 
-	for i := range m1.Prices {
-		if *(m1.Prices[i]) != *(m2.Prices[i]) {
+	for k, v1 := range m1.Prices {
+		v2, ok := m2.Prices[k]
+		if !ok {
+			return false
+		}
+		if v1 != v2 {
 			return false
 		}
 	}
 
 	return true
+}
+
+func EstimateMarket(market *Market, share string, volume float64) (float64, error) {
+	if volume == 0 {
+		return 0, perrors.Errorf("volume can not equal 0")
+	}
+
+	orgVol, ok := market.Shares[share]
+	if !ok {
+		return 0, perrors.Errorf("can not find share (%s) in market (%s)", share, market.Id)
+	}
+
+	if orgVol+volume < 0 {
+		return 0, perrors.Errorf("volume is not enough to sell. org %v, but %v", orgVol, math.Abs(volume))
+	}
+
+	sum := 0.0
+
+	for k, v := range market.Shares {
+		if k == share {
+			sum += Exp(market.Liquidity, v+volume)
+		} else {
+			sum += Exp(market.Liquidity, v)
+		}
+	}
+
+	cost := market.Liquidity * math.Log(sum)
+
+	return cost - market.Cost, nil
+}
+
+func UpdateMarket(market *Market, share string, volume float64) (float64, error) {
+	price, err := EstimateMarket(market, share, volume)
+	if err != nil {
+		return 0, nil
+	}
+
+	market.Shares[share] += volume
+	market.Cost += price
+	Reprices(market)
+	return price, nil
+}
+
+func Reprices(market *Market) {
+	sum := 0.0
+	for _, v := range market.Shares {
+		sum += Exp(market.Liquidity, v)
+	}
+
+	market.Prices = make(map[string]float64)
+	for k, v := range market.Shares {
+		market.Prices[k] = Exp(market.Liquidity, v) / sum
+	}
 }
 
 // UnmarshalMarket ...

@@ -44,36 +44,20 @@ func checkMarket(m *Market, u string, e *Event, num float64, flag bool, t *testi
 		t.Error("settled wrong")
 	}
 
-	for i, x := range m.Shares {
-		if x.Id != ShareID(m.Id, e.Outcomes[i].Id) {
-			t.Error("share id wrong")
-		}
+	var price float64 = 1.0 / float64(len(e.Outcomes))
 
-		if x.Market != m.Id {
-			t.Error("share market id wrong")
-		}
-
-		if x.Outcome != e.Outcomes[i].Id {
-			t.Error("share outcome id wrong")
-		}
-
-		if x.Volume != 0 {
+	for k, v := range m.Shares {
+		if v != 0 {
 			t.Errorf("volume wrong")
 		}
-	}
 
-	var price float64 = 1.0 / float64(len(e.Outcomes))
-	for i, x := range m.Prices {
-		if x.Share != m.Shares[i].Id {
-			t.Error("price share id wrong")
-		}
-
-		if x.Price != price {
+		if p, ok := m.Prices[k]; !ok {
+			t.Errorf("can not find share price: %s", k)
+		} else if p != price {
 			t.Error("price wrong")
 		}
 
 	}
-
 }
 
 func TestNewMarket(t *testing.T) {

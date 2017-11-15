@@ -20,11 +20,9 @@ func NewMarketChaincode() shim.Chaincode {
 }
 
 func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string, num float64, isFund bool) pb.Response {
-	mb, existed, err := ccc.GetStateAndCheck(stub, user)
+	mb, err := ccc.Find(stub, user)
 	if err != nil {
-		return ccc.Errorf("query member (%s) error: %v", user, err)
-	} else if !existed {
-		return ccc.Errorf("member (%s) is not existed", user)
+		return ccc.Errore(err)
 	}
 
 	mem, err := pbm.Unmarshal(mb)
@@ -32,11 +30,9 @@ func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string,
 		return ccc.Errorf("unmarshal member error: %v", err)
 	}
 
-	eb, existed, err := ccc.GetStateAndCheck(stub, event)
+	eb, err := ccc.Find(stub, event)
 	if err != nil {
-		return ccc.Errorf("query event (%s) error: %v", event, err)
-	} else if !existed {
-		return ccc.Errorf("event (%s) is not existed", event)
+		return ccc.Errore(err)
 	}
 
 	evt, err := pbl.UnmarshalEvent(eb)
@@ -92,36 +88,9 @@ func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string,
 	return ccc.PutStateAndReturn(stub, key, bytes, bytes)
 }
 
-func (cc *marketCC) find(stub shim.ChaincodeStubInterface, id string) ([]byte, error) {
-	it, err := stub.GetStateByPartialCompositeKey(pbl.MarketKey, []string{id})
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer it.Close()
-
-	if !it.HasNext() {
-		return nil, fmt.Errorf("market %s not found", id)
-	}
-
-	result, err := it.Next()
-	if err != nil {
-		return nil, fmt.Errorf("next error: %v", err)
-	}
-
-	return result.Value, nil
-}
-
 func (cc *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	/*bytes, existed, err := ccc.GetStateAndCheck(stub, id)
-	if err != nil {
-		return ccc.Errorf("query market (%s) error: %v", id, err)
-	} else if !existed {
-		return ccc.Errorf("market id (%s) is not existed", id)
-	}*/
 
-	bytes, err := cc.find(stub, id)
+	bytes, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, id)
 	if err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
 	}
@@ -135,13 +104,8 @@ func (cc *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Respon
 }
 
 func (cc *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	/*bytes, existed, err := ccc.GetStateAndCheck(stub, id)
-	if err != nil {
-		return ccc.Errorf("query market (%s) error: %v", id, err)
-	} else if !existed {
-		return ccc.Errorf("market id (%s) is not existed", id)
-	}*/
-	bytes, err := cc.find(stub, id)
+
+	bytes, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, id)
 	if err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
 	}

@@ -13,8 +13,6 @@ It has these top-level messages:
 	Asset
 	Outcome
 	Event
-	Share
-	Price
 	Market
 */
 package lmsr
