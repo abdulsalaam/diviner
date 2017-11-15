@@ -117,6 +117,6 @@ func main() {
 	err := shim.Start(NewEventChaincode())
 
 	if err != nil {
-		fmt.Printf("creating member chaincode failed: %v", err)
+		fmt.Printf("creating event chaincode failed: %v", err)
 	}
 }

@@ -180,6 +180,6 @@ func main() {
 	err := shim.Start(NewMarketChaincode())
 
 	if err != nil {
-		fmt.Printf("creating member chaincode failed: %v", err)
+		fmt.Printf("creating market chaincode failed: %v", err)
 	}
 }

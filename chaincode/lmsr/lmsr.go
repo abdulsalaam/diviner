@@ -142,3 +142,11 @@ func (cc *lmsrCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	return ccc.Errorf("unknown function: %s", fcn)
 }
+
+func main() {
+	err := shim.Start(NewLMSRChaincode())
+
+	if err != nil {
+		fmt.Printf("creating lmsr chaincode failed: %v", err)
+	}
+}

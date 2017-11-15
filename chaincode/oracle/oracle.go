@@ -1,6 +1,8 @@
 package oracle
 
 import (
+	"fmt"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -18,4 +20,12 @@ func (cc *oracleCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 func (cc *oracleCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(nil)
+}
+
+func main() {
+	err := shim.Start(NewOracleChaincode())
+
+	if err != nil {
+		fmt.Printf("creating oracle chaincode failed: %v", err)
+	}
 }
