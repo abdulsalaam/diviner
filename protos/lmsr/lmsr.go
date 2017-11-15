@@ -65,6 +65,10 @@ func Split(str, sep string) (string, string, bool) {
 	return "", "", false
 }
 
+func SepMarketID(id string) (string, string, bool) {
+	return Split(id, Sep)
+}
+
 // SepShareID ...
 func SepShareID(id string) (string, string, bool) {
 	return Split(id, Sep)

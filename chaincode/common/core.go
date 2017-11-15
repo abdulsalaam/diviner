@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	pbl "diviner/protos/lmsr"
+
 	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -45,6 +47,17 @@ func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Mess
 		fmt.Println("split ckey: ", a, b)
 		return PutMessage(stub, key, msg)
 	}
+}
+
+// PutMarket ...
+func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) error {
+	// TODO: replace all put market with this
+	evtId, mktId, ok := pbl.SepMarketID(market.Id)
+	if !ok {
+		return fmt.Errorf("market id format error: %s", market.Id)
+	}
+
+	return PutMessageWithCompositeKey(stub, market, pbl.MarketKey, evtId, mktId)
 }
 
 // PutStateByCompositeKey
