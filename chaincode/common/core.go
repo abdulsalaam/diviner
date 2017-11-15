@@ -40,6 +40,9 @@ func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Mess
 	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
 		return err
 	} else {
+		fmt.Println("put ckey: ", key)
+		a, b, _ := stub.SplitCompositeKey(key)
+		fmt.Println("split ckey: ", a, b)
 		return PutMessage(stub, key, msg)
 	}
 }
@@ -104,6 +107,8 @@ func FindByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, ke
 
 // FindAllByPartialCompositeKey ...
 func FindAllByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, keys ...string) (map[string][]byte, error) {
+	ckey, _ := stub.CreateCompositeKey(name, keys)
+	fmt.Println("find by ckey: ", ckey)
 	it, err := stub.GetStateByPartialCompositeKey(name, keys)
 
 	if err != nil {
@@ -113,7 +118,7 @@ func FindAllByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string,
 	defer it.Close()
 
 	if !it.HasNext() {
-		return nil, fmt.Errorf("data not found", strings.Join(keys, ""))
+		return nil, fmt.Errorf("data not found: %s", strings.Join(keys, ""))
 	}
 
 	result := make(map[string][]byte)
