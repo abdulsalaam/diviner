@@ -143,8 +143,10 @@ func CmpMarket(m1, m2 *Market) bool {
 // UnmarshalMarket ...
 func UnmarshalMarket(data []byte) (*Market, error) {
 	mkt := &Market{}
-	err := proto.Unmarshal(data, mkt)
-	return mkt, err
+	if err := proto.Unmarshal(data, mkt); err != nil {
+		return nil, err
+	}
+	return mkt, nil
 }
 
 // MarshalMarket ...

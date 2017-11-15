@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package lmsr;
+
+message Asset{
+  string id = 1;
+  double volume = 2;
+}

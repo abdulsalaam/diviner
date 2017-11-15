@@ -56,8 +56,10 @@ func CmpEvent(e1, e2 *Event) bool {
 // UnmarshalEvent ...
 func UnmarshalEvent(data []byte) (*Event, error) {
 	evt := &Event{}
-	err := proto.Unmarshal(data, evt)
-	return evt, err
+	if err := proto.Unmarshal(data, evt); err != nil {
+		return nil, err
+	}
+	return evt, nil
 }
 
 // MarshalEvent ...

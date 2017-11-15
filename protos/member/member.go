@@ -35,8 +35,10 @@ func NewMember(priv bccsp.Key, balance float64) (*Member, error) {
 // Unmarshal ...
 func Unmarshal(data []byte) (*Member, error) {
 	mem := &Member{}
-	err := proto.Unmarshal(data, mem)
-	return mem, err
+	if err := proto.Unmarshal(data, mem); err != nil {
+		return nil, err
+	}
+	return mem, nil
 }
 
 // Marshal ...
