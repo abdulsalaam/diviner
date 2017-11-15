@@ -96,7 +96,7 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 	if err != nil {
 		return ccc.Errorf("put asset error: %v", err)
 	}
-	member.Assets[asset.Id] += volume
+	member.Assets[asset.Id] = asset.Volume
 
 	if err := ccc.PutMessage(stub, member.Id, member); err != nil {
 		return ccc.Errorf("put member error: %v", err)
