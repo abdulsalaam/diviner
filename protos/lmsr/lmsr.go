@@ -43,7 +43,7 @@ func MarketID(evt string) string {
 
 // OutcomeID ...
 func OutcomeID(evt string, index int) string {
-	return combine(Sep, evt, index)
+	return combine("@", evt, index)
 }
 
 // ShareID ...
@@ -56,23 +56,23 @@ func AssetID(user, share string) string {
 	return combine(Sep, share, user)
 }
 
-func sep(str, sep string) (string, string, bool) {
+func Split(str, sep string) (string, string, bool) {
 	tmp := strings.Split(str, sep)
 	len := len(tmp)
 	if len > 1 {
-		return strings.Join(tmp[0:len-2], sep), tmp[len-1], true
+		return strings.Join(tmp[0:len-1], sep), tmp[len-1], true
 	}
 	return "", "", false
 }
 
 // SepShareID ...
 func SepShareID(id string) (string, string, bool) {
-	return sep(id, Sep)
+	return Split(id, Sep)
 }
 
 // SepOutcomeID ...
 func SepOutcomeID(id string) (string, int, bool) {
-	s1, s2, ok := sep(id, Sep)
+	s1, s2, ok := Split(id, "@")
 	if !ok {
 		return "", 0, false
 	}
