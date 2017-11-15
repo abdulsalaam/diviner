@@ -175,3 +175,7 @@ func UnmarshalMarket(data []byte) (*Market, error) {
 func MarshalMarket(m *Market) ([]byte, error) {
 	return proto.Marshal(m)
 }
+
+func MarshalMarkets(lst *Markets) ([]byte, error) {
+	return proto.Marshal(lst)
+}

@@ -30,3 +30,7 @@ func UnmarshalAsset(data []byte) (*Asset, error) {
 func MarshalAsset(asset *Asset) ([]byte, error) {
 	return proto.Marshal(asset)
 }
+
+func MarshalAssets(lst *Assets) ([]byte, error) {
+	return proto.Marshal(lst)
+}

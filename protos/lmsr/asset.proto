@@ -6,3 +6,7 @@ message Asset{
   string id = 1;
   double volume = 2;
 }
+
+message Assets {
+  repeated Asset list = 1;
+}
