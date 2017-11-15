@@ -36,8 +36,16 @@ func PutMessage(stub shim.ChaincodeStubInterface, key string, msg proto.Message)
 	}
 }
 
+func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Message, name string, keys ...string) error {
+	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
+		return err
+	} else {
+		return PutMessage(stub, key, msg)
+	}
+}
+
 // PutStateByCompositeKey
-func PutStateByCompositeKey(stub shim.ChaincodeStubInterface, name string, value []byte, keys ...string) error {
+func PutStateByCompositeKey(stub shim.ChaincodeStubInterface, value []byte, name string, keys ...string) error {
 	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
 		return err
 	} else {

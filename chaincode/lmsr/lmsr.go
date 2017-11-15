@@ -104,7 +104,7 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 
 	if mktbytes, err := pbl.MarshalMarket(market); err != nil {
 		return ccc.Errorf("marshal market error")
-	} else if err := ccc.PutStateByCompositeKey(stub, pbl.MarketKey, mktbytes, market.Id); err != nil {
+	} else if err := ccc.PutStateByCompositeKey(stub, mktbytes, pbl.MarketKey, market.Id); err != nil {
 		return ccc.Errorf("put market error")
 	}
 
