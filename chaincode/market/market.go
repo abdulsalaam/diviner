@@ -80,12 +80,10 @@ func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string,
 		return ccc.Errorf("marshal market error: %v", err)
 	}
 
-	key, err := stub.CreateCompositeKey(pbl.MarketKey, []string{market.Id})
-	if err != nil {
-		return ccc.Errorf("create composite key error: %v", err)
+	if err := ccc.PutStateByCompositeKey(stub, pbl.MarketKey, bytes, market.Id); err != nil {
+		return ccc.Errorf("put market error: %v", err)
 	}
-
-	return ccc.PutStateAndReturn(stub, key, bytes, bytes)
+	return shim.Success(bytes)
 }
 
 func (cc *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
@@ -126,12 +124,10 @@ func (cc *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Respo
 		return ccc.Errorf("marshal data error: %v", err)
 	}
 
-	key, err := stub.CreateCompositeKey(pbl.MarketKey, []string{market.Id})
-	if err != nil {
-		return ccc.Errorf("create composite key error: %v", err)
+	if err := ccc.PutStateByCompositeKey(stub, pbl.MarketKey, bytes2, market.Id); err != nil {
+		return ccc.Errorf("put market error: %v", err)
 	}
-
-	return ccc.PutStateAndReturn(stub, key, bytes2, nil)
+	return shim.Success(nil)
 }
 
 // Init ...
