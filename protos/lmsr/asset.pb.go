@@ -14,6 +14,7 @@ It has these top-level messages:
 	Outcome
 	Event
 	Market
+	Markets
 */
 package lmsr
 

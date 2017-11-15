@@ -13,3 +13,7 @@ message Market {
   map<string, double> prices = 8;
   bool settled = 9;
 }
+
+message Markets {
+  repeated Market list = 1;
+}

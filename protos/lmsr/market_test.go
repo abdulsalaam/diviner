@@ -20,27 +20,27 @@ func checkMarket(m *Market, u string, e *Event, num float64, flag bool, t *testi
 		fund = Fund(liq, len(e.Outcomes))
 	}
 
-	if m.User != u {
+	if m.GetUser() != u {
 		t.Error("user not match")
 	}
 
-	if m.Event != e.Id {
+	if m.GetEvent() != e.Id {
 		t.Error("event not match")
 	}
 
-	if m.Liquidity != liq {
+	if m.GetLiquidity() != liq {
 		t.Error("liquidity not match")
 	}
 
-	if m.Fund != fund {
+	if m.GetFund() != fund {
 		t.Error("fund not match")
 	}
 
-	if m.Cost != fund {
+	if m.GetCost() != fund {
 		t.Error("cost wrong")
 	}
 
-	if m.Settled {
+	if m.GetSettled() {
 		t.Error("settled wrong")
 	}
 

@@ -3,7 +3,7 @@ package event
 import (
 	ccc "diviner/chaincode/common"
 	"diviner/common/csp"
-	pbe "diviner/protos/lmsr"
+	pbl "diviner/protos/lmsr"
 	pbm "diviner/protos/member"
 	"testing"
 
@@ -45,7 +45,7 @@ func TestCreate(t *testing.T) {
 		t.Fatalf("create event failed: %s", resp.Message)
 	}
 
-	event, err := pbe.UnmarshalEvent(resp.Payload)
+	event, err := pbl.UnmarshalEvent(resp.Payload)
 	if err != nil {
 		t.Fatal("data structure error: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestCreate(t *testing.T) {
 		t.Fatal("query event failed")
 	}
 
-	event, _ = pbe.UnmarshalEvent(resp.Payload)
+	event, _ = pbl.UnmarshalEvent(resp.Payload)
 	if !event.Approved {
 		t.Fatal("event is not approved")
 	}
