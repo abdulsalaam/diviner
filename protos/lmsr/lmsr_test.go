@@ -3,6 +3,7 @@ package lmsr
 import (
 	"fmt"
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -73,6 +74,11 @@ func TestId(t *testing.T) {
 	a, b, ok = Split(asset, Sep)
 	if !ok || a != share || b != user {
 		t.Fatalf("data not match %s, %s, %s", asset, a, b)
+	}
+
+	a, b, c, d, ok := SepAssetID(asset)
+	if !ok || a != event || c != outcome || d != user || b != strings.Replace(market, event+"#", "", 1) {
+		t.Fatalf("data not match")
 	}
 
 	w := "aaa@a123"

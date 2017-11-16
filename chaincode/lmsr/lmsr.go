@@ -2,6 +2,7 @@ package lmsr
 
 import (
 	ccc "diviner/chaincode/common"
+	ccu "diviner/chaincode/util"
 	"fmt"
 	"math"
 	"strconv"
@@ -20,39 +21,13 @@ func NewLMSRChaincode() shim.Chaincode {
 	return new(lmsrCC)
 }
 
-func (cc *lmsrCC) findMarkets(stub shim.ChaincodeStubInterface, evtId string) (*pbl.Markets, error) {
-	lst, err := ccc.FindAllByPartialCompositeKey(stub, pbl.MarketKey, evtId)
-	if err != nil {
-		return nil, fmt.Errorf("find markets errors: %v", err)
-	}
-
-	var markets []*pbl.Market
-
-	for k, v := range lst {
-		if m, err := pbl.UnmarshalMarket(v); err != nil {
-			return nil, fmt.Errorf("unmarshal market error at %s: %v", k, err)
-		} else {
-			markets = append(markets, m)
-		}
-	}
-
-	return &pbl.Markets{
-		List: markets,
-	}, nil
-
-}
-
 func (cc *lmsrCC) markets(stub shim.ChaincodeStubInterface, evtId string) pb.Response {
-	result, err := cc.findMarkets(stub, evtId)
+	result, err := ccu.FindAllMarkets(stub, evtId)
 	if err != nil {
 		return ccc.Errore(err)
 	}
 
-	if bytes, err := pbl.MarshalMarkets(result); err != nil {
-		return ccc.Errorf("marshal markets error: %v", err)
-	} else {
-		return shim.Success(bytes)
-	}
+	return ccc.MarshalAndReturn(result)
 }
 
 func (cc *lmsrCC) updateAsset(stub shim.ChaincodeStubInterface, user, share string, volume float64) (*pbl.Asset, error) {
@@ -78,7 +53,7 @@ func (cc *lmsrCC) updateAsset(stub shim.ChaincodeStubInterface, user, share stri
 
 	if assetKey, err := stub.CreateCompositeKey(pbl.AssetKey, []string{asset.Id}); err != nil {
 		return nil, err
-	} else if err2 := ccc.PutMessage(stub, assetKey, asset); err2 != nil {
+	} else if _, err2 := ccc.PutMessage(stub, assetKey, asset); err2 != nil {
 		return nil, err2
 	}
 
@@ -138,7 +113,7 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 	}
 	member.Assets[asset.Id] = asset.Volume
 
-	if err := ccc.PutMessage(stub, member.Id, member); err != nil {
+	if _, err := ccc.PutMessage(stub, member.Id, member); err != nil {
 		return ccc.Errorf("put member error: %v", err)
 	}
 

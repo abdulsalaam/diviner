@@ -52,12 +52,7 @@ func (evt *eventCC) create(stub shim.ChaincodeStubInterface, user, title string,
 		return ccc.Errorf("create event error: %v", err)
 	}
 
-	bytes, err := pbe.MarshalEvent(event)
-	if err != nil {
-		return ccc.Errorf("marshal event error: %v", err)
-	}
-
-	return ccc.PutStateAndReturn(stub, event.Id, bytes, bytes)
+	return ccc.PutMessageAndReturn(stub, event.Id, event)
 }
 
 func (evt *eventCC) approve(stub shim.ChaincodeStubInterface, id string) pb.Response {
@@ -77,12 +72,11 @@ func (evt *eventCC) approve(stub shim.ChaincodeStubInterface, id string) pb.Resp
 
 	event.Approved = true
 
-	bytes2, err := pbe.MarshalEvent(event)
-	if err != nil {
-		return ccc.Errorf("marshal event error: %v", err)
+	if _, err := ccc.PutMessage(stub, event.Id, event); err != nil {
+		return ccc.Errorf("put event error: %v", err)
 	}
 
-	return ccc.PutStateAndReturn(stub, event.Id, bytes2, nil)
+	return shim.Success(nil)
 }
 
 func (evt *eventCC) Init(stub shim.ChaincodeStubInterface) pb.Response {

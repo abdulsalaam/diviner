@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	ccc "diviner/chaincode/common"
+	ccu "diviner/chaincode/util"
 	pbl "diviner/protos/lmsr"
 	pbm "diviner/protos/member"
 
@@ -66,65 +67,29 @@ func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string,
 
 	mem.Balance -= market.Fund
 
-	mb, err = pbm.Marshal(mem)
-	if err != nil {
-		return ccc.Errorf("marshal member error: %v", err)
+	if _, err := ccc.PutMessage(stub, mem.Id, mem); err != nil {
+		return ccc.Errorf("put member error: %v", err)
 	}
 
-	if err := stub.PutState(mem.Id, mb); err != nil {
-		return ccc.Errorf("update member balance error: %v", err)
-	}
-
-	bytes, err := pbl.MarshalMarket(market)
-	if err != nil {
-		return ccc.Errorf("marshal market error: %v", err)
-	}
-
-	eid, mid, ok := pbl.SepMarketID(market.Id)
-	if !ok {
-		return ccc.Errorf("market id format error")
-	}
-
-	if err := ccc.PutStateByCompositeKey(stub, bytes, pbl.MarketKey, eid, mid); err != nil {
+	if bytes, err := ccu.PutMarket(stub, market); err != nil {
 		return ccc.Errorf("put market error: %v", err)
+	} else {
+		return shim.Success(bytes)
 	}
-
-	return shim.Success(bytes)
 }
 
 func (cc *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	eid, mid, ok := pbl.SepMarketID(id)
-	if !ok {
-		return ccc.Errorf("market id format error")
-	}
-
-	bytes, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, eid, mid)
-	if err != nil {
+	if m, err := ccu.FindMarket(stub, id); err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
+	} else {
+		return ccc.MarshalAndReturn(m)
 	}
-
-	_, err = pbl.UnmarshalMarket(bytes)
-	if err != nil {
-		return ccc.Errorf("unmarshal data error: %v", err)
-	}
-
-	return shim.Success(bytes)
 }
 
 func (cc *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	eid, mid, ok := pbl.SepMarketID(id)
-	if !ok {
-		return ccc.Errorf("market id format error")
-	}
-
-	bytes, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, eid, mid)
+	market, err := ccu.FindMarket(stub, id)
 	if err != nil {
-		return ccc.Errorf("query market (%s) error: %v", id, err)
-	}
-
-	market, err := pbl.UnmarshalMarket(bytes)
-	if err != nil {
-		return ccc.Errorf("unmarshal data error: %v", err)
+		return ccc.Errorf("find market (%s) error: %v", id, err)
 	}
 
 	if market.Settled {
@@ -133,14 +98,10 @@ func (cc *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Respo
 
 	market.Settled = true
 
-	bytes2, err := pbl.MarshalMarket(market)
-	if err != nil {
-		return ccc.Errorf("marshal data error: %v", err)
-	}
-
-	if err := ccc.PutStateByCompositeKey(stub, bytes2, pbl.MarketKey, eid, mid); err != nil {
+	if _, err := ccu.PutMarket(stub, market); err != nil {
 		return ccc.Errorf("put market error: %v", err)
 	}
+
 	return shim.Success(nil)
 }
 

@@ -14,8 +14,8 @@ const (
 	Sep = "#"
 
 	// MarketKey ...
-	MarketKey = "eid~mid"
-	AssetKey  = "sid~uid"
+	MarketKey = "market"
+	AssetKey  = "asset"
 )
 
 func id() string {
@@ -63,6 +63,18 @@ func Split(str, sep string) (string, string, bool) {
 		return strings.Join(tmp[0:len-1], sep), tmp[len-1], true
 	}
 	return "", "", false
+}
+
+// SepAssetID ...
+func SepAssetID(id string) (string, string, string, string, bool) {
+	tmp := strings.SplitN(id, Sep, 4)
+
+	if len(tmp) != 4 {
+		return "", "", "", "", false
+	}
+
+	return tmp[0], tmp[1], tmp[2], tmp[3], true // evt, mkt, outcome, user, true
+
 }
 
 // SepMarketID

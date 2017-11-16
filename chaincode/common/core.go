@@ -28,32 +28,22 @@ func GetStateAndCheck(stub shim.ChaincodeStubInterface, key string) ([]byte, boo
 }
 
 // PutMessageAndReturn
-func PutMessage(stub shim.ChaincodeStubInterface, key string, msg proto.Message) error {
+func PutMessage(stub shim.ChaincodeStubInterface, key string, msg proto.Message) ([]byte, error) {
 	if bytes, err := proto.Marshal(msg); err != nil {
-		return err
+		return nil, err
 	} else {
-		return stub.PutState(key, bytes)
+		return bytes, stub.PutState(key, bytes)
 	}
 }
 
 // PutMessageWithCompositeKey ...
-func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Message, name string, keys ...string) error {
+func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Message, name string, keys ...string) ([]byte, error) {
 	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
-		return err
+		return nil, err
 	} else {
 		return PutMessage(stub, key, msg)
 	}
 }
-
-// PutMarket ...
-/*func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) error {
-	evtId, mktId, ok := pbl.SepMarketID(market.Id)
-	if !ok {
-		return fmt.Errorf("market id format error: %s", market.Id)
-	}
-
-	return PutMessageWithCompositeKey(stub, market, pbl.MarketKey, evtId, mktId)
-}*/
 
 // PutStateByCompositeKey
 func PutStateByCompositeKey(stub shim.ChaincodeStubInterface, value []byte, name string, keys ...string) error {
@@ -74,9 +64,32 @@ func PutStateAndReturn(stub shim.ChaincodeStubInterface, key string, value, payl
 	return shim.Success(payload)
 }
 
+// PutMessageAndReturn ..
+func PutMessageAndReturn(stub shim.ChaincodeStubInterface, key string, msg proto.Message) pb.Response {
+	if bytes, err := PutMessage(stub, key, msg); err != nil {
+		return Errore(err)
+	} else {
+		return shim.Success(bytes)
+	}
+}
+
+// MarshalAndReturn ...
+func MarshalAndReturn(msg proto.Message) pb.Response {
+	if bytes, err := proto.Marshal(msg); err != nil {
+		return Errore(err)
+	} else {
+		return shim.Success(bytes)
+	}
+}
+
 // OK ...
 func OK(resp *pb.Response) bool {
 	return resp.Status == shim.OK
+}
+
+// NotOK
+func NotOK(resp *pb.Response) bool {
+	return !(resp.Status == shim.OK)
 }
 
 // Find ...
