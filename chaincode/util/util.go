@@ -18,19 +18,30 @@ func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) ([]byte, er
 	return ccc.PutMessageWithCompositeKey(stub, market, pbl.MarketKey, evtId, mktId)
 }
 
-// FindMarket ...
-func FindMarket(stub shim.ChaincodeStubInterface, market string) (*pbl.Market, error) {
+// GetMarketAndCheck ...
+func GetMarketAndCheck(stub shim.ChaincodeStubInterface, market string) (*pbl.Market, bool, error) {
 	eid, mid, ok := pbl.SepMarketID(market)
 	if !ok {
-		return nil, fmt.Errorf("market id format error")
+		return nil, false, fmt.Errorf("market id format error")
 	}
 
-	bytes, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, eid, mid)
+	result, existed, err := ccc.GetStateByCompositeKeyAndCheck(stub, pbl.MarketKey, eid, mid)
 	if err != nil {
-		return nil, fmt.Errorf("query market (%s) error: %v", market, err)
+		return nil, false, fmt.Errorf("query market (%s) error: %v", market, err)
+	} else if !existed {
+		return nil, false, nil
 	}
 
-	return pbl.UnmarshalMarket(bytes)
+	bytes := ccc.GetOneValue(result)
+	if err != nil {
+		return nil, false, fmt.Errorf("list content error")
+	}
+
+	if tmp, err := pbl.UnmarshalMarket(bytes); err != nil {
+		return nil, false, err
+	} else {
+		return tmp, true, nil
+	}
 }
 
 // FindAllMarkets ...
@@ -91,7 +102,7 @@ func GetAssetAndCheck(stub shim.ChaincodeStubInterface, asset string) (*pbl.Asse
 }
 
 func FindAllAssets(stub shim.ChaincodeStubInterface, keys ...string) (*pbl.Assets, error) {
-	result, err := ccc.FindAllByPartialCompositeKey(stub, pbl.MarketKey, keys...)
+	result, err := ccc.FindAllByPartialCompositeKey(stub, pbl.AssetKey, keys...)
 
 	if err != nil {
 		return nil, fmt.Errorf("find all assets errors: %v", err)

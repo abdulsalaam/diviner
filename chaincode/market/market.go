@@ -79,17 +79,21 @@ func (cc *marketCC) create(stub shim.ChaincodeStubInterface, user, event string,
 }
 
 func (cc *marketCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	if m, err := ccu.FindMarket(stub, id); err != nil {
+	if m, existed, err := ccu.GetMarketAndCheck(stub, id); err != nil {
 		return ccc.Errorf("query market (%s) error: %v", id, err)
+	} else if !existed {
+		return ccc.Errorf("market (%s) not found", id)
 	} else {
 		return ccc.MarshalAndReturn(m)
 	}
 }
 
 func (cc *marketCC) settle(stub shim.ChaincodeStubInterface, id string) pb.Response {
-	market, err := ccu.FindMarket(stub, id)
+	market, existed, err := ccu.GetMarketAndCheck(stub, id)
 	if err != nil {
 		return ccc.Errorf("find market (%s) error: %v", id, err)
+	} else if !existed {
+		return ccc.Errorf("market (%s) not found", id)
 	}
 
 	if market.Settled {

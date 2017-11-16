@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	pbl "diviner/protos/lmsr"
 	pbm "diviner/protos/member"
@@ -25,6 +26,15 @@ func (cc *lmsrCC) markets(stub shim.ChaincodeStubInterface, evtId string) pb.Res
 	result, err := ccu.FindAllMarkets(stub, evtId)
 	if err != nil {
 		return ccc.Errore(err)
+	}
+
+	return ccc.MarshalAndReturn(result)
+}
+
+func (cc *lmsrCC) assets(stub shim.ChaincodeStubInterface, keys []string) pb.Response {
+	result, err := ccu.FindAllAssets(stub, keys...)
+	if err != nil {
+		return ccc.Errorf("find all assets of (%s) error: %v", strings.Join(keys, pbl.Sep), err)
 	}
 
 	return ccc.MarshalAndReturn(result)
@@ -63,9 +73,11 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("share id format error")
 	}
 
-	market, err := ccu.FindMarket(stub, mktId)
+	market, existed, err := ccu.GetMarketAndCheck(stub, mktId)
 	if err != nil {
 		return ccc.Errore(err)
+	} else if !existed {
+		return ccc.Errorf("market (%s) not found", mktId)
 	}
 
 	_, ok = market.Shares[share]
@@ -146,6 +158,12 @@ func (cc *lmsrCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 			return ccc.Errorf("args length error for markets: %v", len)
 		}
 		return cc.markets(stub, args[0])
+	case "assets":
+		if len < 1 {
+			return ccc.Errorf("args length error for assets: %v", len)
+		}
+
+		return cc.assets(stub, args)
 	}
 
 	return ccc.Errorf("unknown function: %s", fcn)

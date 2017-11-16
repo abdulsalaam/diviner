@@ -143,7 +143,7 @@ func GetOneValue(x map[string][]byte) []byte {
 func FindByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, keys ...string) ([]byte, error) {
 	result, existed, err := GetStateByCompositeKeyAndCheck(stub, name, keys...)
 	if existed {
-		GetOneValue(result)
+		return GetOneValue(result), nil
 	} else if err == nil {
 		return nil, fmt.Errorf("data not found: %s", strings.Join(keys, ""))
 	}
