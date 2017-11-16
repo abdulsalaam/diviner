@@ -32,16 +32,15 @@ func (cc *lmsrCC) markets(stub shim.ChaincodeStubInterface, evtId string) pb.Res
 
 func (cc *lmsrCC) updateAsset(stub shim.ChaincodeStubInterface, user, share string, volume float64) (*pbl.Asset, error) {
 	id := pbl.AssetID(user, share)
-	var asset *pbl.Asset
-
-	bytes, err := ccc.FindByPartialCompositeKey(stub, pbl.AssetKey, id)
+	asset, existed, err := ccu.GetAssetAndCheck(stub, id)
 	if err != nil {
-		if asset, err = pbl.NewAsset(user, share, 0.0); err != nil {
-			return nil, err
-		}
-	} else {
-		if asset, err = pbl.UnmarshalAsset(bytes); err != nil {
-			return nil, err
+		return nil, err
+	}
+
+	if !existed {
+		asset = &pbl.Asset{
+			Id:     id,
+			Volume: 0.0,
 		}
 	}
 
@@ -51,10 +50,8 @@ func (cc *lmsrCC) updateAsset(stub shim.ChaincodeStubInterface, user, share stri
 
 	asset.Volume += volume
 
-	if assetKey, err := stub.CreateCompositeKey(pbl.AssetKey, []string{asset.Id}); err != nil {
+	if _, err := ccu.PutAsset(stub, asset); err != nil {
 		return nil, err
-	} else if _, err2 := ccc.PutMessage(stub, assetKey, asset); err2 != nil {
-		return nil, err2
 	}
 
 	return asset, nil
@@ -66,19 +63,9 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("share id format error")
 	}
 
-	eid, mid, ok := pbl.SepMarketID(mktId)
-	if !ok {
-		return ccc.Errorf("market id format error")
-	}
-
-	tmp, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, eid, mid)
+	market, err := ccu.FindMarket(stub, mktId)
 	if err != nil {
 		return ccc.Errore(err)
-	}
-
-	market, err := pbl.UnmarshalMarket(tmp)
-	if err != nil {
-		return ccc.Errorf("unmarshal market error: %v", err)
 	}
 
 	_, ok = market.Shares[share]
@@ -86,7 +73,7 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("share (%s) not found in market (%s)", share, mktId)
 	}
 
-	tmp, err = ccc.Find(stub, user)
+	tmp, err := ccc.Find(stub, user)
 	if err != nil {
 		return ccc.Errore(err)
 	}
@@ -117,10 +104,8 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("put member error: %v", err)
 	}
 
-	if mktbytes, err := pbl.MarshalMarket(market); err != nil {
-		return ccc.Errorf("marshal market error")
-	} else if err := ccc.PutStateByCompositeKey(stub, mktbytes, pbl.MarketKey, market.Id); err != nil {
-		return ccc.Errorf("put market error")
+	if _, err := ccu.PutMarket(stub, market); err != nil {
+		return ccc.Errorf("put market error: %v", err)
 	}
 
 	return shim.Success(nil)

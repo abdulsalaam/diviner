@@ -27,6 +27,32 @@ func GetStateAndCheck(stub shim.ChaincodeStubInterface, key string) ([]byte, boo
 	return bytes, bytes != nil && err == nil, err
 }
 
+// GetStateByCompositeKeyAndCheck ...
+func GetStateByCompositeKeyAndCheck(stub shim.ChaincodeStubInterface, name string, keys ...string) (map[string][]byte, bool, error) {
+	it, err := stub.GetStateByPartialCompositeKey(name, keys)
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	defer it.Close()
+
+	if !it.HasNext() {
+		return nil, false, nil
+	}
+
+	result := make(map[string][]byte)
+	for i := 0; it.HasNext(); i++ {
+		tmp, err := it.Next()
+		if err != nil {
+			return nil, false, fmt.Errorf("next error: %v", err)
+		}
+		result[tmp.Key] = tmp.Value
+	}
+
+	return result, true, nil
+}
+
 // PutMessageAndReturn
 func PutMessage(stub shim.ChaincodeStubInterface, key string, msg proto.Message) ([]byte, error) {
 	if bytes, err := proto.Marshal(msg); err != nil {
@@ -104,50 +130,35 @@ func Find(stub shim.ChaincodeStubInterface, id string) ([]byte, error) {
 	return bytes, nil
 }
 
+func GetOneValue(x map[string][]byte) []byte {
+	if len(x) > 0 {
+		for _, v := range x {
+			return v
+		}
+	}
+	return nil
+}
+
 // FindByPartialCompositeKey ...
 func FindByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, keys ...string) ([]byte, error) {
-	it, err := stub.GetStateByPartialCompositeKey(name, keys)
-
-	if err != nil {
-		return nil, err
+	result, existed, err := GetStateByCompositeKeyAndCheck(stub, name, keys...)
+	if existed {
+		GetOneValue(result)
+	} else if err == nil {
+		return nil, fmt.Errorf("data not found: %s", strings.Join(keys, ""))
 	}
 
-	defer it.Close()
-
-	if !it.HasNext() {
-		return nil, fmt.Errorf("data not found", strings.Join(keys, ""))
-	}
-
-	result, err := it.Next()
-	if err != nil {
-		return nil, fmt.Errorf("next error: %v", err)
-	}
-
-	return result.Value, nil
+	return nil, err
 }
 
 // FindAllByPartialCompositeKey ...
 func FindAllByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, keys ...string) (map[string][]byte, error) {
-	it, err := stub.GetStateByPartialCompositeKey(name, keys)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer it.Close()
-
-	if !it.HasNext() {
+	result, existed, err := GetStateByCompositeKeyAndCheck(stub, name, keys...)
+	if existed {
+		return result, nil
+	} else if err == nil {
 		return nil, fmt.Errorf("data not found: %s", strings.Join(keys, ""))
 	}
 
-	result := make(map[string][]byte)
-	for i := 0; it.HasNext(); i++ {
-		tmp, err := it.Next()
-		if err != nil {
-			return nil, fmt.Errorf("next error: %v", err)
-		}
-		result[tmp.Key] = tmp.Value
-	}
-
-	return result, nil
+	return nil, err
 }
