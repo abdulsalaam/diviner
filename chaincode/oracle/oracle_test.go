@@ -1,7 +1,6 @@
 package oracle
 
 import (
-	"fmt"
 	"testing"
 
 	ccc "diviner/chaincode/common"
@@ -28,22 +27,37 @@ func TestMain(m *testing.M) {
 	member, _ = pbm.NewMember(priv, balance)
 	event, _ = pbl.NewEvent(member.Id, title, outcomes[0], outcomes[1])
 	market1, _ = pbl.NewMarketWithFund(member.Id, event, 100.0)
-	fmt.Println("m1: ", market1.Id)
+
 	market2, _ = pbl.NewMarketWithFund(member.Id, event, 200.0)
 
 	txid := uuid.New().String()
 	stub.MockTransactionStart(txid)
 	ccc.PutMessage(stub, member.Id, member)
 	ccc.PutMessage(stub, event.Id, event)
-	ccc.PutMessageWithCompositeKey(stub, market1, pbl.MarketKey, market1.Id)
-	ccc.PutMessageWithCompositeKey(stub, market2, pbl.MarketKey, market2.Id)
+	eid, mid, _ := pbl.SepMarketID(market1.Id)
+	ccc.PutMessageWithCompositeKey(stub, market1, pbl.MarketKey, eid, mid)
+	eid, mid, _ = pbl.SepMarketID(market2.Id)
+	ccc.PutMessageWithCompositeKey(stub, market2, pbl.MarketKey, eid, mid)
 	stub.MockTransactionEnd(txid)
 	m.Run()
 }
 
 func TestMarkets(t *testing.T) {
-	resp := ccc.MockInvokeWithString(stub, "markets", market1.Id)
+	resp := ccc.MockInvokeWithString(stub, "markets", event.Id)
 	if !ccc.OK(&resp) {
 		t.Fatalf("invoke markets failed: %s", resp.Message)
 	}
+
+	markets, _ := pbl.UnmarshalMarkets(resp.Payload)
+	if len(markets.List) != 2 {
+		t.Fatal("list length failed")
+	}
+
+	if !(pbl.CmpMarket(market1, markets.List[0]) ||
+		pbl.CmpMarket(market1, markets.List[1]) ||
+		pbl.CmpMarket(market2, markets.List[0]) ||
+		pbl.CmpMarket(market2, markets.List[1])) {
+		t.Fatal("data not match")
+	}
+
 }

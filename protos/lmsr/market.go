@@ -176,6 +176,16 @@ func MarshalMarket(m *Market) ([]byte, error) {
 	return proto.Marshal(m)
 }
 
+// UnmarshalMarkets ...
+func UnmarshalMarkets(data []byte) (*Markets, error) {
+	lst := &Markets{}
+	if err := proto.Unmarshal(data, lst); err != nil {
+		return nil, err
+	}
+	return lst, nil
+}
+
+// MarshalMarket ...
 func MarshalMarkets(lst *Markets) ([]byte, error) {
 	return proto.Marshal(lst)
 }

@@ -20,6 +20,41 @@ func NewLMSRChaincode() shim.Chaincode {
 	return new(lmsrCC)
 }
 
+func (cc *lmsrCC) findMarkets(stub shim.ChaincodeStubInterface, evtId string) (*pbl.Markets, error) {
+	lst, err := ccc.FindAllByPartialCompositeKey(stub, pbl.MarketKey, evtId)
+	if err != nil {
+		return nil, fmt.Errorf("find markets errors: %v", err)
+	}
+
+	var markets []*pbl.Market
+
+	for k, v := range lst {
+		if m, err := pbl.UnmarshalMarket(v); err != nil {
+			return nil, fmt.Errorf("unmarshal market error at %s: %v", k, err)
+		} else {
+			markets = append(markets, m)
+		}
+	}
+
+	return &pbl.Markets{
+		List: markets,
+	}, nil
+
+}
+
+func (cc *lmsrCC) markets(stub shim.ChaincodeStubInterface, evtId string) pb.Response {
+	result, err := cc.findMarkets(stub, evtId)
+	if err != nil {
+		return ccc.Errore(err)
+	}
+
+	if bytes, err := pbl.MarshalMarkets(result); err != nil {
+		return ccc.Errorf("marshal markets error: %v", err)
+	} else {
+		return shim.Success(bytes)
+	}
+}
+
 func (cc *lmsrCC) updateAsset(stub shim.ChaincodeStubInterface, user, share string, volume float64) (*pbl.Asset, error) {
 	id := pbl.AssetID(user, share)
 	var asset *pbl.Asset
@@ -56,7 +91,12 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("share id format error")
 	}
 
-	tmp, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, mktId)
+	eid, mid, ok := pbl.SepMarketID(mktId)
+	if !ok {
+		return ccc.Errorf("market id format error")
+	}
+
+	tmp, err := ccc.FindByPartialCompositeKey(stub, pbl.MarketKey, eid, mid)
 	if err != nil {
 		return ccc.Errore(err)
 	}
@@ -120,24 +160,32 @@ func (cc *lmsrCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	fcn, args := stub.GetFunctionAndParameters()
 	len := len(args)
 
-	if len != 3 {
-		return ccc.Errorf("args length error for buying: %v", len)
-	}
-
-	volume, err := strconv.ParseFloat(args[2], 64)
-	if err != nil {
-		return ccc.Errorf("volume must be float64: %s", args[2])
-	} else if volume <= 0 {
-		return ccc.Errorf("volume must be larger than 0: %v", volume)
-	}
-	user := args[0]
-	share := args[1]
-
 	switch fcn {
-	case "buy":
+	case "buy", "sell":
+		if len != 3 {
+			return ccc.Errorf("args length error for buying: %v", len)
+		}
+
+		volume, err := strconv.ParseFloat(args[2], 64)
+		if err != nil {
+			return ccc.Errorf("volume must be float64: %s", args[2])
+		} else if volume <= 0 {
+			return ccc.Errorf("volume must be larger than 0: %v", volume)
+		}
+		user := args[0]
+		share := args[1]
+
+		if fcn == "sell" {
+			volume = -volume
+		}
+
 		return cc.tx(stub, user, share, volume)
-	case "sell":
-		return cc.tx(stub, user, share, -volume)
+
+	case "markets":
+		if len != 1 {
+			return ccc.Errorf("args length error for markets: %v", len)
+		}
+		return cc.markets(stub, args[0])
 	}
 
 	return ccc.Errorf("unknown function: %s", fcn)

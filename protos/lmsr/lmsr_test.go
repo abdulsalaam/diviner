@@ -55,9 +55,15 @@ func TestId(t *testing.T) {
 	}
 
 	market := MarketID(event)
+
+	a, b, ok := SepMarketID(market)
+	if !ok || a != event {
+		t.Fatalf("data not match %s, %s", market, a, b)
+	}
+
 	share := ShareID(market, outcome)
 
-	a, b, ok := SepShareID(share)
+	a, b, ok = SepShareID(share)
 	if !ok || a != market || b != outcome {
 		t.Fatalf("data not match %s, %s, %s", share, a, b)
 	}

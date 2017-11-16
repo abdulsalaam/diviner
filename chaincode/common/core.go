@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	pbl "diviner/protos/lmsr"
-
 	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -38,27 +36,24 @@ func PutMessage(stub shim.ChaincodeStubInterface, key string, msg proto.Message)
 	}
 }
 
+// PutMessageWithCompositeKey ...
 func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Message, name string, keys ...string) error {
 	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
 		return err
 	} else {
-		fmt.Println("put ckey: ", key)
-		a, b, _ := stub.SplitCompositeKey(key)
-		fmt.Println("split ckey: ", a, b)
 		return PutMessage(stub, key, msg)
 	}
 }
 
 // PutMarket ...
-func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) error {
-	// TODO: replace all put market with this
+/*func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) error {
 	evtId, mktId, ok := pbl.SepMarketID(market.Id)
 	if !ok {
 		return fmt.Errorf("market id format error: %s", market.Id)
 	}
 
 	return PutMessageWithCompositeKey(stub, market, pbl.MarketKey, evtId, mktId)
-}
+}*/
 
 // PutStateByCompositeKey
 func PutStateByCompositeKey(stub shim.ChaincodeStubInterface, value []byte, name string, keys ...string) error {
@@ -120,8 +115,6 @@ func FindByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, ke
 
 // FindAllByPartialCompositeKey ...
 func FindAllByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string, keys ...string) (map[string][]byte, error) {
-	ckey, _ := stub.CreateCompositeKey(name, keys)
-	fmt.Println("find by ckey: ", ckey)
 	it, err := stub.GetStateByPartialCompositeKey(name, keys)
 
 	if err != nil {
