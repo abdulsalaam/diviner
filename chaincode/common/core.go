@@ -131,7 +131,7 @@ func Find(stub shim.ChaincodeStubInterface, id string) ([]byte, error) {
 }
 
 func GetOneValue(x map[string][]byte) []byte {
-	if len(x) > 0 {
+	if x == nil || len(x) > 0 {
 		for _, v := range x {
 			return v
 		}
