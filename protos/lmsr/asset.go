@@ -31,6 +31,14 @@ func MarshalAsset(asset *Asset) ([]byte, error) {
 	return proto.Marshal(asset)
 }
 
+func UnMarshalAssets(lst []byte) (*Assets, error) {
+	assets := &Assets{}
+	if err := proto.Unmarshal(lst, assets); err != nil {
+		return nil, err
+	}
+	return assets, nil
+}
+
 func MarshalAssets(lst *Assets) ([]byte, error) {
 	return proto.Marshal(lst)
 }

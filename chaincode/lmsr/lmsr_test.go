@@ -287,6 +287,75 @@ func TestSimulator(t *testing.T) {
 	dumpMarket(market)
 	dumpMember(mem4)
 
+	members := make(map[string]*pbm.Member)
+	members[mem1.Id] = mem1
+	members[mem2.Id] = mem2
+	members[mem3.Id] = mem3
+	members[mem4.Id] = mem4
+	members[mem5.Id] = mem5
+
+	my := 0.0
+	mn := 0.0
+
+	totalShares1 := 0
+	totalShares2 := 0
+
+	for _, v := range members {
+		for x := range v.Assets {
+			_, existed, err := ccu.GetAssetAndCheck(stub, x)
+			if err != nil {
+				t.Fatalf("find asset failed: %s, %v", x, err)
+			}
+
+			if !existed {
+				t.Fatalf("asset not found %s", x)
+			}
+			totalShares1 += 1
+		}
+	}
+
+	for _, v := range members {
+		k1 := pbl.AssetID(v.Id, yes)
+		k2 := pbl.AssetID(v.Id, no)
+
+		my += v.Assets[k1]
+		mn += v.Assets[k2]
+	}
+
+	if yesVolume != my || noVolume != mn {
+		t.Fatal("member volume falied: %v, %v, %v, %v", yesVolume, my, noVolume, mn)
+	}
+
+	resp := ccc.MockInvokeWithString(stub, "assets", event.Id)
+	if !ccc.OK(&resp) {
+		t.Fatalf("get assets by event (%s) failed: %v", event.Id, resp.Message)
+	}
+
+	assets, _ := pbl.UnMarshalAssets(resp.Payload)
+	totalVolume := 0.0
+	totalShares2 = len(assets.List)
+
+	if totalShares1 != totalShares2 {
+		t.Fatal("asset count failed: %v, %v", totalShares1, totalShares2)
+	}
+
+	for _, x := range assets.List {
+		_, _, _, user, _ := pbl.SepAssetID(x.Id)
+
+		v1 := members[user].Assets[x.Id]
+		v2 := x.Volume
+
+		if v1 != v2 {
+			t.Fatal("assert in ledger failed: %s, %s, %v, %v", user, x.Id, v1, v2)
+		}
+
+		totalVolume += v2
+	}
+
+	if totalVolume != yesVolume+noVolume {
+		t.Fatalf("total volume failed: %v, %v, %v", totalVolume, yesVolume, noVolume)
+	}
+
 }
 
 func checkTx(t *testing.T, cmd, user, share, volume string) float64 {
