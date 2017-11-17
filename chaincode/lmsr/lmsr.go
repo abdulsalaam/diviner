@@ -42,6 +42,7 @@ func (cc *lmsrCC) assets(stub shim.ChaincodeStubInterface, keys []string) pb.Res
 }
 
 func (cc *lmsrCC) updateAsset(stub shim.ChaincodeStubInterface, user, share string, volume float64) (*pbl.Asset, error) {
+
 	id := pbl.AssetID(user, share)
 	asset, existed, err := ccu.GetAssetAndCheck(stub, id)
 	if err != nil {

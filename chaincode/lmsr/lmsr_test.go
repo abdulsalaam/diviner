@@ -93,7 +93,7 @@ func TestSimulator(t *testing.T) {
 	mem2, _ := pbm.NewMember(priv2, balance)
 	mem3, _ := pbm.NewMember(priv3, balance)
 	mem4, _ := pbm.NewMember(priv4, balance)
-	mem5, _ := pbm.NewMember(priv5, balance)
+	mem5, _ := pbm.NewMember(priv5, 0.0)
 
 	event, _ := pbl.NewEvent(mem0.Id, "GO", "Yes", "No")
 	market, _ := pbl.NewMarketWithLiquidity(mem0.Id, event, 100.0)
@@ -300,6 +300,7 @@ func TestSimulator(t *testing.T) {
 	totalShares1 := 0
 	totalShares2 := 0
 
+	// find asset in ledger by member assets
 	for _, v := range members {
 		for x := range v.Assets {
 			_, existed, err := ccu.GetAssetAndCheck(stub, x)
@@ -314,6 +315,7 @@ func TestSimulator(t *testing.T) {
 		}
 	}
 
+	// sum share volume by member assets
 	for _, v := range members {
 		k1 := pbl.AssetID(v.Id, yes)
 		k2 := pbl.AssetID(v.Id, no)
@@ -326,6 +328,7 @@ func TestSimulator(t *testing.T) {
 		t.Fatal("member volume falied: %v, %v, %v, %v", yesVolume, my, noVolume, mn)
 	}
 
+	// find all assets by event id
 	resp := ccc.MockInvokeWithString(stub, "assets", event.Id)
 	if !ccc.OK(&resp) {
 		t.Fatalf("get assets by event (%s) failed: %v", event.Id, resp.Message)
@@ -354,6 +357,100 @@ func TestSimulator(t *testing.T) {
 
 	if totalVolume != yesVolume+noVolume {
 		t.Fatalf("total volume failed: %v, %v, %v", totalVolume, yesVolume, noVolume)
+	}
+
+	// find all assets by market id
+	evt, mkt, _ := pbl.SepMarketID(market.Id)
+	resp = ccc.MockInvokeWithString(stub, "assets", evt, mkt)
+	if !ccc.OK(&resp) {
+		t.Fatalf("get assets by event (%s) failed: %v", event.Id, resp.Message)
+	}
+
+	assets, _ = pbl.UnMarshalAssets(resp.Payload)
+	totalVolume = 0.0
+	totalShares2 = len(assets.List)
+
+	if totalShares1 != totalShares2 {
+		t.Fatal("asset count failed: %v, %v", totalShares1, totalShares2)
+	}
+
+	for _, x := range assets.List {
+		_, _, _, user, _ := pbl.SepAssetID(x.Id)
+
+		v1 := members[user].Assets[x.Id]
+		v2 := x.Volume
+
+		if v1 != v2 {
+			t.Fatal("assert in ledger failed: %s, %s, %v, %v", user, x.Id, v1, v2)
+		}
+
+		totalVolume += v2
+	}
+
+	if totalVolume != yesVolume+noVolume {
+		t.Fatalf("total volume failed: %v, %v, %v", totalVolume, yesVolume, noVolume)
+	}
+
+	// test wrong with mem5
+	resp = ccc.MockInvokeWithString(stub, "buy", mem5.Id, yes, "100")
+	if ccc.OK(&resp) {
+		t.Fatalf("can not buy without enough balance")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, "sell", mem5.Id, yes, "100")
+	if ccc.OK(&resp) {
+		t.Fatalf("can not sell without enough asset volume")
+	}
+
+}
+
+func TestWrongData(t *testing.T) {
+	resp := ccc.MockInvokeWithString(stub, "assets")
+	if ccc.OK(&resp) {
+		t.Fatal("can not find any assets with wrong data")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, "buy", "a", "b", "c", "d", "e")
+	if ccc.OK(&resp) {
+		t.Fatal("can not invoke buy with wrong data")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, "sell", "a", "b", "c", "d", "e")
+	if ccc.OK(&resp) {
+		t.Fatal("can not invoke sell with wrong data")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, "sell", "a", "b", "c")
+	if ccc.OK(&resp) {
+		t.Fatal("can not invoke buy with wrong type for volume")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, "sell", "a", "b", "0")
+	if ccc.OK(&resp) {
+		t.Fatal("can not invoke buy with volume <= 0")
+	}
+
+	memId := "abc"
+	evtId := pbl.EventID()
+	mktId := pbl.MarketID(evtId)
+	outcomeId := pbl.OutcomeID(evtId, 10)
+	shareId := pbl.ShareID(mktId, outcomeId)
+
+	resp = ccc.MockInvokeWithString(stub, "buy", memId, shareId, "10")
+	if ccc.OK(&resp) {
+		t.Fatalf("can not invoke with non-existed data")
+	}
+
+	shareId = pbl.ShareID(market1.Id, event0.Outcomes[0].Id)
+
+	resp = ccc.MockInvokeWithString(stub, "buy", memId, shareId+"1", "10")
+	if ccc.OK(&resp) {
+		t.Fatalf("can not invoke with non-existed data")
+	}
+
+	resp = ccc.MockInvokeWithString(stub, "buy", memId, shareId, "10")
+	if ccc.OK(&resp) {
+		t.Fatalf("can not invoke with non-existed data")
 	}
 
 }
