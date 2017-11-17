@@ -132,14 +132,13 @@ func TestSimulator(t *testing.T) {
 	yesVolume := 0.0
 	noVolume := 0.0
 	price := 0.0
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 
 	// step 1: mem1 buy yes 100
 	txVolume := 100.0
 	yesVolume += txVolume
 	mem1, market, price = myCheck(t, mem1, market, "buy", yes, txVolume)
-	/*price := checkTx(t, "buy", mem1.Id, yes, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, yes, txVolume, price)
-	mem1 = checkMember(t, mem1, yes, txVolume, price)*/
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	fmt.Printf("\nstep 1: mem1 buy yes 100: %v\n", price)
 	dumpMarket(market)
 	dumpMember(mem1)
@@ -147,9 +146,8 @@ func TestSimulator(t *testing.T) {
 	// step 2: mem2 buy yes 40
 	txVolume = 40
 	yesVolume += txVolume
-	price = checkTx(t, "buy", mem2.Id, yes, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, yes, txVolume, price)
-	mem2 = checkMember(t, mem2, yes, txVolume, price)
+	mem2, market, price = myCheck(t, mem2, market, "buy", yes, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	fmt.Printf("\nstep 2: mem2 buy yes 40: %v\n", price)
 	dumpMarket(market)
 	dumpMember(mem2)
@@ -157,29 +155,26 @@ func TestSimulator(t *testing.T) {
 	// step 3: mem3 buy no 20
 	txVolume = 20
 	noVolume += txVolume
-	price = checkTx(t, "buy", mem3.Id, no, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, no, txVolume, price)
-	mem3 = checkMember(t, mem3, no, txVolume, price)
+	mem3, market, price = myCheck(t, mem3, market, "buy", no, txVolume)
 	fmt.Printf("\nstep 3: mem3 buy no 20: %v\n", price)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	dumpMarket(market)
 	dumpMember(mem3)
 
 	// step 4: mem1 buy yes 50
 	txVolume = 50
 	yesVolume += txVolume
-	price = checkTx(t, "buy", mem1.Id, yes, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, yes, txVolume, price)
-	mem1 = checkMember(t, mem1, yes, txVolume, price)
+	mem1, market, price = myCheck(t, mem1, market, "buy", yes, txVolume)
 	fmt.Printf("\nstep 4: mem1 buy yes 50: %v\n", price)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	dumpMarket(market)
 	dumpMember(mem1)
 
 	// step 5: mem2 buy yes 100
 	txVolume = 100
 	yesVolume += txVolume
-	price = checkTx(t, "buy", mem2.Id, yes, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, yes, txVolume, price)
-	mem2 = checkMember(t, mem2, yes, txVolume, price)
+	mem2, market, price = myCheck(t, mem2, market, "buy", yes, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	fmt.Printf("\nstep 5: mem2 buy yes 100: %v\n", price)
 	dumpMarket(market)
 	dumpMember(mem2)
@@ -187,19 +182,17 @@ func TestSimulator(t *testing.T) {
 	// step 6: mem4 buy no 50
 	txVolume = 50
 	noVolume += txVolume
-	price = checkTx(t, "buy", mem4.Id, no, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, no, txVolume, price)
-	mem4 = checkMember(t, mem4, no, txVolume, price)
+	mem4, market, price = myCheck(t, mem4, market, "buy", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	fmt.Printf("\nstep 6: mem4 buy no 50: %v\n", price)
 	dumpMarket(market)
 	dumpMember(mem4)
 
-	// step 7: mem 1 sell yes 40
+	// step 7: mem1 sell yes 40
 	txVolume = 40
 	yesVolume -= txVolume
-	price = checkTx(t, "sell", mem1.Id, yes, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, yes, -txVolume, -price)
-	mem1 = checkMember(t, mem1, yes, -txVolume, -price)
+	mem1, market, price = myCheck(t, mem1, market, "sell", yes, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
 	fmt.Printf("\nstep 7: mem 1 sell yes 40: %v\n", price)
 	dumpMarket(market)
 	dumpMember(mem1)
@@ -207,52 +200,93 @@ func TestSimulator(t *testing.T) {
 	// step 8: mem3 buy no 30
 	txVolume = 30
 	noVolume += txVolume
-	price = checkTx(t, "buy", mem3.Id, no, fmt.Sprintf("%v", txVolume))
-	market = checkMarket(t, market, no, txVolume, price)
-	mem1 = checkMember(t, mem3, no, txVolume, price)
-	fmt.Printf("\nstep 7: mem 1 sell yes 40: %v\n", price)
+	mem3, market, price = myCheck(t, mem3, market, "buy", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 8: mem3 buy no 30: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem3)
+
+	// step 9: mem2 buy yes 40
+	txVolume = 40
+	yesVolume += txVolume
+	mem2, market, price = myCheck(t, mem2, market, "buy", yes, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 9: mem2 buy yes 40: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem2)
+
+	// step 10: mem4 buy no 300
+	txVolume = 300
+	noVolume += txVolume
+	mem4, market, price = myCheck(t, mem4, market, "buy", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 10: mem4 buy no 300: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem4)
+
+	// step 11: mem3 sell no 10
+	txVolume = 10
+	noVolume -= txVolume
+	mem3, market, price = myCheck(t, mem3, market, "sell", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 11: mem3 sell no 10: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem3)
+
+	// step 12: mem4 buy no 150
+	txVolume = 150
+	noVolume += txVolume
+	mem4, market, price = myCheck(t, mem4, market, "buy", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 12: mem4 buy no 150: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem4)
+
+	// step 13: mem2 sell yes 40
+	txVolume = 40
+	yesVolume -= txVolume
+	mem2, market, price = myCheck(t, mem2, market, "sell", yes, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 13: mem2 sell yes 40: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem2)
+
+	// step 14: mem3 buy no 20
+	txVolume = 20
+	noVolume += txVolume
+	mem3, market, price = myCheck(t, mem3, market, "buy", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 14: mem3 buy no 20: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem3)
+
+	// step 15: mem1 buy yes 40
+	txVolume = 40
+	yesVolume += txVolume
+	mem1, market, price = myCheck(t, mem1, market, "buy", yes, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 15: mem1 buy yes 40: %v\n", price)
 	dumpMarket(market)
 	dumpMember(mem1)
-	/*
-		// step 9: buy yes 40
-		order, _ = mock.users[1].Order(market, yes, 40, 0.99)
-		addOrder(&orders, assets, order)
 
-		// step 10: buy no 300
-		order, _ = mock.users[3].Order(market, no, 300, 0.99)
-		addOrder(&orders, assets, order)
+	// step 16: mem3 buy no 200
+	txVolume = 200
+	noVolume += txVolume
+	mem3, market, price = myCheck(t, mem3, market, "buy", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 16: mem3 buy no 200: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem3)
 
-		// step 11: sell no 10
-		aid = core.AssetID(mock.users[2].Account, market.Shares[1].ID)
-		order, _ = mock.users[2].Sell(assets[aid], 10)
-		addOrder(&orders, assets, order)
+	// step 17: mem4 sell no 100
+	txVolume = 100
+	noVolume -= txVolume
+	mem4, market, price = myCheck(t, mem4, market, "sell", no, txVolume)
+	checkShares(t, market, yes, no, yesVolume, noVolume)
+	fmt.Printf("\nstep 17: mem4 sell no 100: %v\n", price)
+	dumpMarket(market)
+	dumpMember(mem4)
 
-		// step 12: buy no 150
-		order, _ = mock.users[3].Order(market, no, 150, 0.99)
-		addOrder(&orders, assets, order)
-
-		// step 13: sell yes 40
-		aid = core.AssetID(mock.users[1].Account, market.Shares[0].ID)
-		order, _ = mock.users[1].Sell(assets[aid], 40)
-		addOrder(&orders, assets, order)
-
-		// step 14: buy no 20
-		order, _ = mock.users[2].Order(market, no, 20, 0.99)
-		addOrder(&orders, assets, order)
-
-		// step 15: buy yes 40
-		order, _ = mock.users[0].Order(market, yes, 40, 0.99)
-		addOrder(&orders, assets, order)
-
-		// step 16: buy no 200
-		order, _ = mock.users[2].Order(market, no, 200, 0.99)
-		addOrder(&orders, assets, order)
-
-		// step 17: sell no 100
-		aid = core.AssetID(mock.users[3].Account, market.Shares[1].ID)
-		order, _ = mock.users[3].Sell(assets[aid], 100)
-		addOrder(&orders, assets, order)
-	*/
 }
 
 func checkTx(t *testing.T, cmd, user, share, volume string) float64 {
@@ -294,6 +328,12 @@ func checkMarket(t *testing.T, old *pbl.Market, share string, volume, price floa
 	}
 
 	return mkttmp
+}
+
+func checkShares(t *testing.T, market *pbl.Market, yes, no string, y, n float64) {
+	if market.Shares[yes] != y || market.Shares[no] != n {
+		t.Fatal("share amount failed: %v, %v, %v, %v", market.Shares[yes], y, market.Shares[no], n)
+	}
 }
 
 func myCheck(t *testing.T, mem *pbm.Member, market *pbl.Market, cmd, share string, volume float64) (*pbm.Member, *pbl.Market, float64) {
