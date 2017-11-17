@@ -3,6 +3,7 @@ package lmsr
 import (
 	ccc "diviner/chaincode/common"
 	ccu "diviner/chaincode/util"
+	"diviner/common/cast"
 	"fmt"
 	"math"
 	"strconv"
@@ -110,6 +111,10 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 	if err != nil {
 		return ccc.Errorf("put asset error: %v", err)
 	}
+
+	if member.Assets == nil {
+		member.Assets = make(map[string]float64)
+	}
 	member.Assets[asset.Id] = asset.Volume
 
 	if _, err := ccc.PutMessage(stub, member.Id, member); err != nil {
@@ -120,7 +125,10 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("put market error: %v", err)
 	}
 
-	return shim.Success(nil)
+	priceBytes, _ := cast.ToBytes(math.Abs(price))
+
+	return shim.Success(priceBytes)
+
 }
 
 func (cc *lmsrCC) Init(stub shim.ChaincodeStubInterface) pb.Response {

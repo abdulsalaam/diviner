@@ -3,10 +3,26 @@ package util
 import (
 	ccc "diviner/chaincode/common"
 	pbl "diviner/protos/lmsr"
+	pbm "diviner/protos/member"
 	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
+
+func GetMember(stub shim.ChaincodeStubInterface, id string) (*pbm.Member, bool, error) {
+	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
+	if err != nil {
+		return nil, false, err
+	} else if !existed {
+		return nil, false, nil
+	}
+
+	if x, err := pbm.Unmarshal(bytes); err != nil {
+		return nil, false, err
+	} else {
+		return x, true, nil
+	}
+}
 
 // PutMarket ...
 func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) ([]byte, error) {

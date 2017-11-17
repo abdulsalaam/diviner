@@ -61,6 +61,14 @@ func TestCreateWithFund(t *testing.T) {
 		t.Fatal("data error")
 	}
 
+	if mkt2.Fund != 100.0 {
+		t.Fatalf("fund failed: %v", mkt2.Fund)
+	}
+
+	if mkt2.Liquidity != pbl.Liquidity(100.0, len(event.Outcomes)) {
+		t.Fatalf("liquidity failed: %v", mkt2.Liquidity)
+	}
+
 	mb, existed, err := ccc.GetStateAndCheck(stub, member.Id)
 	if err != nil {
 		t.Fatal("query user failed")
@@ -96,6 +104,14 @@ func TestCreateWithLiquidity(t *testing.T) {
 
 	if !pbl.CmpMarket(mkt, mkt2) {
 		t.Fatal("data error")
+	}
+
+	if mkt2.Liquidity != 100.0 {
+		t.Fatalf("liquidity failed: %v", mkt2.Liquidity)
+	}
+
+	if mkt2.Fund != pbl.Fund(100.0, len(event.Outcomes)) {
+		t.Fatalf("fund failed: %v", mkt2.Fund)
 	}
 
 	mb, existed, err := ccc.GetStateAndCheck(stub, member.Id)
