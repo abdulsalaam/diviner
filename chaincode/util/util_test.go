@@ -87,6 +87,35 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+func TestFindMember(t *testing.T) {
+	m, existed, err := GetMember(stub, member.Id)
+	if err != nil {
+		t.Fatalf("get member (%s) failed: %v", member.Id, err)
+	}
+
+	if !existed {
+		t.Fatalf("must find an existed member (%s)", member.Id)
+	}
+
+	if m.Id != member.Id || m.Balance != member.Balance || m.Address != member.Address {
+		t.Fatalf("data not match: %v, %v", m, member)
+	}
+
+	m, existed, err = GetMember(stub, "abcdef")
+	if err != nil {
+		t.Fatalf("get non-existed member failed: %v", err)
+	}
+
+	if existed {
+		t.Fatal("can not find non-existed member")
+	}
+
+	if m != nil {
+		t.Fatal("non-existed member must return nil")
+	}
+
+}
+
 func TestFindMaket(t *testing.T) {
 	txid := uuid.New().String()
 	stub.MockTransactionStart(txid)
