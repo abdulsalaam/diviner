@@ -440,6 +440,12 @@ func TestSimulator(t *testing.T) {
 
 	}
 
+	// test market failed
+	resp = ccc.MockInvokeWithString(stub, "settle", market.Id, result)
+	if ccc.OK(&resp) {
+		t.Fatalf("can not settle a settled market")
+	}
+
 	// test wrong with mem5
 	resp = ccc.MockInvokeWithString(stub, "buy", mem5.Id, yes, "100")
 	if ccc.OK(&resp) {

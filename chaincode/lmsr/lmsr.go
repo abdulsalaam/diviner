@@ -269,7 +269,9 @@ func (cc lmsrCC) approve(stub shim.ChaincodeStubInterface, id, result string) pb
 	}
 
 	for _, x := range markets.List {
-		if _, err := cc.setteMarket(stub, x, result); err != nil {
+		if x.Settled {
+			continue
+		} else if _, err := cc.setteMarket(stub, x, result); err != nil {
 			return ccc.Errore(err)
 		}
 	}
