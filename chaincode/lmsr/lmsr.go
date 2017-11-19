@@ -138,14 +138,60 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 
 }
 
+func (cc *lmsrCC) settleAssets(stub shim.ChaincodeStubInterface, marketId, result string) error {
+
+	evt, mkt, ok := pbl.SepMarketID(marketId)
+	if !ok {
+		return fmt.Errorf("id (%s) format error", marketId)
+	}
+
+	assets, err := ccu.FindAllAssets(stub, evt, mkt)
+
+	if err != nil {
+		return fmt.Errorf("find assets of (%s) error: %v", marketId, err)
+	}
+
+	updateMembers := make(map[string]*pbm.Member)
+
+	for _, x := range assets.List {
+		aevt, amkt, aoutcome, auser, ok := pbl.SepAssetID(x.Id)
+		if aevt != evt || amkt != mkt {
+			return fmt.Errorf("data error, need (%s, %s) but (%s, %s)", evt, mkt, aevt, amkt)
+		}
+		if !ok {
+			return fmt.Errorf("asset id (%s) error", x.Id)
+		}
+
+		mem, existed, err := ccu.GetMember(stub, auser)
+		if err != nil {
+			return fmt.Errorf("get member (%s) error: %v", auser, err)
+		} else if !existed {
+			return fmt.Errorf("member (%s) not found", auser)
+		}
+
+		if aoutcome == result {
+			mem.Balance += mem.Assets[x.Id]
+		}
+
+		delete(mem.Assets, x.Id)
+		updateMembers[mem.Id] = mem
+		if err := stub.DelState(x.Id); err != nil {
+			return fmt.Errorf("delete asset (%s) error: %v", x.Id, err)
+		}
+	}
+
+	for _, x := range updateMembers {
+		if _, err := ccc.PutMessage(stub, x.Id, x); err != nil {
+			return fmt.Errorf("update member (%s) error: %v", x.Id, err)
+		}
+	}
+
+	return nil
+}
+
 func (cc *lmsrCC) setteMarket(stub shim.ChaincodeStubInterface, market *pbl.Market, result string) (float64, error) {
 	if market.Settled {
 		return 0.0, fmt.Errorf("market (%s) is settled", market.Id)
-	}
-
-	evt, mkt, ok := pbl.SepMarketID(market.Id)
-	if !ok {
-		return 0.0, fmt.Errorf("id (%s) format error", market.Id)
 	}
 
 	owner, existed, err := ccu.GetMember(stub, market.User)
@@ -171,45 +217,8 @@ func (cc *lmsrCC) setteMarket(stub shim.ChaincodeStubInterface, market *pbl.Mark
 		return 0.0, fmt.Errorf("put market (%s) error: %v", market.Id, err)
 	}
 
-	assets, err := ccu.FindAllAssets(stub, evt, mkt)
-
-	if err != nil {
-		return 0.0, fmt.Errorf("find assets of (%s) error: %v", market.Id, err)
-	}
-
-	updateMembers := make(map[string]*pbm.Member)
-
-	for _, x := range assets.List {
-		aevt, amkt, aoutcome, auser, ok := pbl.SepAssetID(x.Id)
-		if aevt != evt || amkt != mkt {
-			return 0.0, fmt.Errorf("data error, need (%s, %s) but (%s, %s)", evt, mkt, aevt, amkt)
-		}
-		if !ok {
-			return 0.0, fmt.Errorf("asset id (%s) error", x.Id)
-		}
-
-		mem, existed, err := ccu.GetMember(stub, auser)
-		if err != nil {
-			return 0.0, fmt.Errorf("get member (%s) error: %v", auser, err)
-		} else if !existed {
-			return 0.0, fmt.Errorf("member (%s) not found", auser)
-		}
-
-		if aoutcome == result {
-			mem.Balance += mem.Assets[x.Id]
-		}
-
-		delete(mem.Assets, x.Id)
-		updateMembers[mem.Id] = mem
-		if err := stub.DelState(x.Id); err != nil {
-			return 0.0, fmt.Errorf("delete asset (%s) error: %v", x.Id, err)
-		}
-	}
-
-	for _, x := range updateMembers {
-		if _, err := ccc.PutMessage(stub, x.Id, x); err != nil {
-			return 0.0, fmt.Errorf("update member (%s) error: %v", x.Id, err)
-		}
+	if err := cc.settleAssets(stub, market.Id, result); err != nil {
+		return 0.0, err
 	}
 
 	return returns, nil
