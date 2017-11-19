@@ -217,6 +217,10 @@ func (cc *lmsrCC) setteMarket(stub shim.ChaincodeStubInterface, market *pbl.Mark
 		return 0.0, fmt.Errorf("put market (%s) error: %v", market.Id, err)
 	}
 
+	if _, err := ccc.PutMessage(stub, owner.Id, owner); err != nil {
+		return 0.0, fmt.Errorf("put member (%s) error: %v", owner.Id, err)
+	}
+
 	if err := cc.settleAssets(stub, market.Id, result); err != nil {
 		return 0.0, err
 	}

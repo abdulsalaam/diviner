@@ -93,7 +93,7 @@ func TestSimulator(t *testing.T) {
 	mem2, _ := pbm.NewMember(priv2, balance)
 	mem3, _ := pbm.NewMember(priv3, balance)
 	mem4, _ := pbm.NewMember(priv4, balance)
-	mem5, _ := pbm.NewMember(priv5, 0.0)
+	mem5, _ := pbm.NewMember(priv5, 0.01)
 
 	event, _ := pbl.NewEvent(mem0.Id, "GO", "Yes", "No")
 	market, _ := pbl.NewMarketWithLiquidity(mem0.Id, event, 100.0)
@@ -125,6 +125,7 @@ func TestSimulator(t *testing.T) {
 	ccc.PutMessage(stub, event.Id, event)
 	ccu.PutMarket(stub, market)
 	mem0.Balance -= market.Fund
+	ccc.PutMessage(stub, mem0.Id, mem0)
 	stub.MockTransactionEnd(txid)
 
 	fmt.Println("step 0: market")
@@ -389,6 +390,54 @@ func TestSimulator(t *testing.T) {
 
 	if totalVolume != yesVolume+noVolume {
 		t.Fatalf("total volume failed: %v, %v, %v", totalVolume, yesVolume, noVolume)
+	}
+
+	// approve event and check all
+	result := event.Outcomes[0].Id
+	resultShare := pbl.ShareID(market.Id, result)
+	resp = ccc.MockInvokeWithString(stub, "approve", event.Id, result)
+	if !ccc.OK(&resp) {
+		t.Fatalf("appove event %s failed: %s", event.Id, resp.Message)
+	}
+
+	eventResult, err := ccu.FindEvent(stub, event.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !eventResult.Approved {
+		t.Fatal("event is not approved")
+	}
+
+	marketResult, _, _ := ccu.GetMarketAndCheck(stub, market.Id)
+	if !marketResult.Settled {
+		t.Fatal("market is not settled")
+	}
+
+	owner, _, _ := ccu.GetMember(stub, market.User)
+	fmt.Printf("owner balance %v, %v, %v, %v\n", owner.Balance, mem0.Balance, marketResult.Cost, marketResult.Shares[resultShare])
+	if owner.Balance != mem0.Balance+marketResult.Cost-market.Shares[resultShare] {
+		t.Fatalf("owner balance failed: %v, %v, %v, %v", owner.Balance, mem0.Balance, marketResult.Cost, marketResult.Shares[resultShare])
+	}
+
+	for _, x := range members {
+		x1, _, _ := ccu.GetMember(stub, x.Id)
+		if len(x1.Assets) > 0 {
+			t.Fatalf("member (%s) assets must be empty after settled", x1.Id)
+		}
+
+		aid := pbl.AssetID(x1.Id, resultShare)
+		fmt.Printf("member balance %v, %v, %v\n", x1.Balance, x.Balance, x.Assets[aid])
+		if x1.Balance != x.Balance+x.Assets[aid] {
+			t.Fatalf("member (%s) balance failed: %v, %v, %v", x1.Id, x1.Balance, x.Balance, x.Assets[aid])
+		}
+
+		/*for s := range market.Shares {
+			a := pbl.AssetID(x1.Id, s)
+			if _, ok := x1.Assets[a]; ok {
+				t.Fatalf("asset (%s) must be removed after settled", a)
+			}
+		}*/
+
 	}
 
 	// test wrong with mem5
