@@ -148,15 +148,6 @@ func (cc *lmsrCC) setteMarket(stub shim.ChaincodeStubInterface, market *pbl.Mark
 		return 0.0, fmt.Errorf("id (%s) format error", market.Id)
 	}
 
-	/*event, err := ccu.FindEvent(stub, evt)
-	if err != nil {
-		return ccc.Errorf("find event (%s) error: %v", evt, err)
-	}
-
-	if pbl.FindOutcome(event, result) < 0 {
-		return ccc.Errorf("result (%s) is not one of event outcomes", result)
-	}*/
-
 	owner, existed, err := ccu.GetMember(stub, market.User)
 	if err != nil {
 		return 0.0, fmt.Errorf("find market owner (%s) error: %v", market.User, err)
