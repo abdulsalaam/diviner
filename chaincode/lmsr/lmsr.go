@@ -23,6 +23,14 @@ func NewLMSRChaincode() shim.Chaincode {
 	return new(lmsrCC)
 }
 
+func (cc *lmsrCC) returnFloat(value float64) pb.Response {
+	if bytes, err := cast.ToBytes(value); err != nil {
+		return ccc.Errore(err)
+	} else {
+		return shim.Success(bytes)
+	}
+}
+
 func (cc *lmsrCC) markets(stub shim.ChaincodeStubInterface, evtId string) pb.Response {
 	result, err := ccu.FindAllMarkets(stub, evtId)
 	if err != nil {
@@ -126,9 +134,143 @@ func (cc *lmsrCC) tx(stub shim.ChaincodeStubInterface, user, share string, volum
 		return ccc.Errorf("put market error: %v", err)
 	}
 
-	priceBytes, _ := cast.ToBytes(math.Abs(price))
+	return cc.returnFloat(math.Abs(price))
 
-	return shim.Success(priceBytes)
+}
+
+func (cc *lmsrCC) setteMarket(stub shim.ChaincodeStubInterface, market *pbl.Market, result string) (float64, error) {
+	if market.Settled {
+		return 0.0, fmt.Errorf("market (%s) is settled", market.Id)
+	}
+
+	evt, mkt, ok := pbl.SepMarketID(market.Id)
+	if !ok {
+		return 0.0, fmt.Errorf("id (%s) format error", market.Id)
+	}
+
+	/*event, err := ccu.FindEvent(stub, evt)
+	if err != nil {
+		return ccc.Errorf("find event (%s) error: %v", evt, err)
+	}
+
+	if pbl.FindOutcome(event, result) < 0 {
+		return ccc.Errorf("result (%s) is not one of event outcomes", result)
+	}*/
+
+	owner, existed, err := ccu.GetMember(stub, market.User)
+	if err != nil {
+		return 0.0, fmt.Errorf("find market owner (%s) error: %v", market.User, err)
+	} else if !existed {
+		return 0.0, fmt.Errorf("market owner (%s) not found", market.User)
+	}
+
+	share := pbl.ShareID(market.Id, result)
+	volume, ok := market.Shares[share]
+	if !ok {
+		return 0.0, fmt.Errorf("share (%s) not found in market (%s)", share, market.Id)
+	}
+
+	returns := market.Cost - volume
+
+	owner.Balance += returns
+
+	market.Settled = true
+
+	if _, err := ccu.PutMarket(stub, market); err != nil {
+		return 0.0, fmt.Errorf("put market (%s) error: %v", market.Id, err)
+	}
+
+	assets, err := ccu.FindAllAssets(stub, evt, mkt)
+
+	if err != nil {
+		return 0.0, fmt.Errorf("find assets of (%s) error: %v", market.Id, err)
+	}
+
+	updateMembers := make(map[string]*pbm.Member)
+
+	for _, x := range assets.List {
+		aevt, amkt, aoutcome, auser, ok := pbl.SepAssetID(x.Id)
+		if aevt != evt || amkt != mkt {
+			return 0.0, fmt.Errorf("data error, need (%s, %s) but (%s, %s)", evt, mkt, aevt, amkt)
+		}
+		if !ok {
+			return 0.0, fmt.Errorf("asset id (%s) error", x.Id)
+		}
+
+		mem, existed, err := ccu.GetMember(stub, auser)
+		if err != nil {
+			return 0.0, fmt.Errorf("get member (%s) error: %v", auser, err)
+		} else if !existed {
+			return 0.0, fmt.Errorf("member (%s) not found", auser)
+		}
+
+		if aoutcome == result {
+			mem.Balance += mem.Assets[x.Id]
+		}
+
+		delete(mem.Assets, x.Id)
+		updateMembers[mem.Id] = mem
+		if err := stub.DelState(x.Id); err != nil {
+			return 0.0, fmt.Errorf("delete asset (%s) error: %v", x.Id, err)
+		}
+	}
+
+	for _, x := range updateMembers {
+		if _, err := ccc.PutMessage(stub, x.Id, x); err != nil {
+			return 0.0, fmt.Errorf("update member (%s) error: %v", x.Id, err)
+		}
+	}
+
+	return returns, nil
+}
+
+func (cc *lmsrCC) settle(stub shim.ChaincodeStubInterface, id, result string) pb.Response {
+	market, existed, err := ccu.GetMarketAndCheck(stub, id)
+	if err != nil {
+		return ccc.Errorf("get market (%s) error: %v", id, err)
+	} else if !existed {
+		return ccc.Errorf("market (%s) not found", id)
+	}
+
+	if a, err := cc.setteMarket(stub, market, result); err != nil {
+		return ccc.Errore(err)
+	} else {
+		return cc.returnFloat(a)
+	}
+}
+
+func (cc lmsrCC) approve(stub shim.ChaincodeStubInterface, id, result string) pb.Response {
+	event, err := ccu.FindEvent(stub, id)
+	if err != nil {
+		return ccc.Errorf("find event (%s) error: %v", id, err)
+	}
+
+	if event.Approved {
+		return ccc.Errorf("event (%s) is approved", id)
+	}
+
+	if pbl.FindOutcome(event, result) < 0 {
+		return ccc.Errorf("result (%s) is not in event (%s)", result, id)
+	}
+
+	event.Approved = true
+
+	if _, err := ccc.PutMessage(stub, event.Id, event); err != nil {
+		return ccc.Errorf("put event (%s) error: %v", event.Id, err)
+	}
+
+	markets, err := ccu.FindAllMarkets(stub, event.Id)
+	if err != nil {
+		ccc.Errorf("find martets of event (%s) error: %v", event.Id, err)
+	}
+
+	for _, x := range markets.List {
+		if _, err := cc.setteMarket(stub, x, result); err != nil {
+			return ccc.Errore(err)
+		}
+	}
+
+	return shim.Success(nil)
 
 }
 
@@ -173,6 +315,20 @@ func (cc *lmsrCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		}
 
 		return cc.assets(stub, args)
+
+	case "settle":
+		if len != 2 {
+			return ccc.Errorf("args length error for settle: %v", len)
+		}
+
+		return cc.settle(stub, args[0], args[1])
+
+	case "approve":
+		if len != 2 {
+			return ccc.Errorf("args length error for approve: %v", len)
+		}
+
+		return cc.approve(stub, args[0], args[1])
 	}
 
 	return ccc.Errorf("unknown function: %s", fcn)

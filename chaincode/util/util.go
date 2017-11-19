@@ -24,6 +24,16 @@ func GetMember(stub shim.ChaincodeStubInterface, id string) (*pbm.Member, bool, 
 	}
 }
 
+func FindEvent(stub shim.ChaincodeStubInterface, id string) (*pbl.Event, error) {
+	if bytes, err := ccc.Find(stub, id); err != nil {
+		return nil, err
+	} else if evt, err := pbl.UnmarshalEvent(bytes); err != nil {
+		return nil, err
+	} else {
+		return evt, nil
+	}
+}
+
 // PutMarket ...
 func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) ([]byte, error) {
 	evtId, mktId, ok := pbl.SepMarketID(market.Id)
