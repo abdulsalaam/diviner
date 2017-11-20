@@ -1,0 +1,12 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: diviner.info
+    Specs:
+      - Hostname: orderer
+PeerOrgs:
+  - Name:
+    Domain: diviner.info
+    Template:
+      Count: 2
+    Users:
+      Count: 1
