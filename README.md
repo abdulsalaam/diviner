@@ -19,6 +19,25 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 5. `configtxgen -profile DivinerChannel -outputCreateChannelTx ./channel-artifacts/diviner_channel.tx -channelID divinerchannel`
 6. `configtxgen -profile DivinerChannel -outputAnchorPeersUpdate ./channel-artifacts/DivinerMSPanchors.tx -channelID divinerchannel -asOrg DivinerMSP`
 
+### start
+1. `docker-compose -f docker-compose-cli.yaml up -d`
+
+### stop and remove
+1. `docker-compose -f docker-compose-cli.yaml down`
+
+### login cli
+1. `docker exec -it cli bash`
+
+### cli
+#### join channel
+1. `peer channel create -o orderer.diviner.info:7050 -c divinerchannel -f ./channel-artifacts/diviner_channel.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem`
+2. `peer channel join -b divinerchannel.block`
+
+3. `CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/diviner.info/users/Admin@diviner.info/msp CORE_PEER_ADDRESS=peer1.diviner.info:7051 CORE_PEER_LOCALMSPID="DivinerMSP" CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/diviner.info/peers/peer1.diviner.info/tls/ca.crt peer channel join -b divinerchannel.block`
+
+#### update anchor
+1. `peer channel update -o orderer.diviner.info:7050 -c divinerchannel -f ./channel-artifacts/DivinerMSPanchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem`
+
 ## TODO
 1. Because can not handle concurrent transactions on a market, it needs an transaction queue for each market
 2. Member management
