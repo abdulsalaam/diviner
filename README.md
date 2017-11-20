@@ -38,6 +38,10 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 #### update anchor
 1. `peer channel update -o orderer.diviner.info:7050 -c divinerchannel -f ./channel-artifacts/DivinerMSPanchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem`
 
+#### chaincode
+1. `peer chaincode install -n member -v 1.0 -p diviner/chaincode/member`
+2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n member -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
+
 ## TODO
 1. Because can not handle concurrent transactions on a market, it needs an transaction queue for each market
 2. Member management
