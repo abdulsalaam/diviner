@@ -162,7 +162,7 @@ func (cc *lmsrCC) settleAssets(stub shim.ChaincodeStubInterface, marketId, resul
 			return fmt.Errorf("asset id (%s) error", x.Id)
 		}
 
-		mem, existed, err := ccu.GetMember(stub, auser)
+		mem, existed, err := ccu.GetMemberAndCheck(stub, auser)
 		if err != nil {
 			return fmt.Errorf("get member (%s) error: %v", auser, err)
 		} else if !existed {
@@ -194,7 +194,7 @@ func (cc *lmsrCC) setteMarket(stub shim.ChaincodeStubInterface, market *pbl.Mark
 		return 0.0, fmt.Errorf("market (%s) is settled", market.Id)
 	}
 
-	owner, existed, err := ccu.GetMember(stub, market.User)
+	owner, existed, err := ccu.GetMemberAndCheck(stub, market.User)
 	if err != nil {
 		return 0.0, fmt.Errorf("find market owner (%s) error: %v", market.User, err)
 	} else if !existed {

@@ -413,14 +413,14 @@ func TestSimulator(t *testing.T) {
 		t.Fatal("market is not settled")
 	}
 
-	owner, _, _ := ccu.GetMember(stub, market.User)
+	owner, _, _ := ccu.GetMemberAndCheck(stub, market.User)
 	fmt.Printf("owner balance %v, %v, %v, %v\n", owner.Balance, mem0.Balance, marketResult.Cost, marketResult.Shares[resultShare])
 	if owner.Balance != mem0.Balance+marketResult.Cost-market.Shares[resultShare] {
 		t.Fatalf("owner balance failed: %v, %v, %v, %v", owner.Balance, mem0.Balance, marketResult.Cost, marketResult.Shares[resultShare])
 	}
 
 	for _, x := range members {
-		x1, _, _ := ccu.GetMember(stub, x.Id)
+		x1, _, _ := ccu.GetMemberAndCheck(stub, x.Id)
 		if len(x1.Assets) > 0 {
 			t.Fatalf("member (%s) assets must be empty after settled", x1.Id)
 		}
@@ -525,7 +525,7 @@ func checkTx(t *testing.T, cmd, user, share, volume string) float64 {
 }
 
 func checkMember(t *testing.T, old *pbm.Member, share string, volume, price float64) *pbm.Member {
-	memtmp, _, _ := ccu.GetMember(stub, old.Id)
+	memtmp, _, _ := ccu.GetMemberAndCheck(stub, old.Id)
 	asstmp := pbl.AssetID(old.Id, share)
 	if memtmp.Assets[asstmp] != old.Assets[asstmp]+volume {
 		t.Fatalf("asset volume failed: %v, %v, %v", memtmp.Assets[asstmp], old.Assets[asstmp], volume)

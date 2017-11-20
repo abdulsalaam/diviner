@@ -88,7 +88,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFindMember(t *testing.T) {
-	m, existed, err := GetMember(stub, member.Id)
+	m, existed, err := GetMemberAndCheck(stub, member.Id)
 	if err != nil {
 		t.Fatalf("get member (%s) failed: %v", member.Id, err)
 	}
@@ -101,7 +101,7 @@ func TestFindMember(t *testing.T) {
 		t.Fatalf("data not match: %v, %v", m, member)
 	}
 
-	m, existed, err = GetMember(stub, "abcdef")
+	m, existed, err = GetMemberAndCheck(stub, "abcdef")
 	if err != nil {
 		t.Fatalf("get non-existed member failed: %v", err)
 	}

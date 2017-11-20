@@ -9,7 +9,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-func GetMember(stub shim.ChaincodeStubInterface, id string) (*pbm.Member, bool, error) {
+func GetMemberAndCheck(stub shim.ChaincodeStubInterface, id string) (*pbm.Member, bool, error) {
 	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 	if err != nil {
 		return nil, false, err
