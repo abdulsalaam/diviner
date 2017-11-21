@@ -62,6 +62,7 @@ services:
     volumes:
         - /var/run/:/host/var/run/
         - ../../../src:/opt/gopath/src
+        - /tmp/vendor:/opt/gopath/src/diviner/vendor
         - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
     depends_on:
