@@ -1,4 +1,4 @@
-package lmsr
+package main
 
 import (
 	"fmt"

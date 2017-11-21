@@ -1,4 +1,4 @@
-package event
+package main
 
 import (
 	ccc "diviner/chaincode/common"

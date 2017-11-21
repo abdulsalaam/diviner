@@ -1,4 +1,4 @@
-package market
+package main
 
 import (
 	"diviner/common/csp"

@@ -1,4 +1,4 @@
-package member
+package main
 
 import (
 	ccc "diviner/chaincode/common"
