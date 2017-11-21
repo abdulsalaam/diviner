@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package chaincode_example02;
+
+message test {
+  string id = 1;
+  int32 balance = 2;
+}
