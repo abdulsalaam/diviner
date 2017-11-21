@@ -10,7 +10,7 @@ It is generated from these files:
 It has these top-level messages:
 	Test
 */
-package chaincode_example02
+package main
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
