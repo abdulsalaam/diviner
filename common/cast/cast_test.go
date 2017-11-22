@@ -33,6 +33,16 @@ func TestCast(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	_, err = ToBytes(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	/*_, err = ToBytes(123)
+	if err != nil {
+		t.Fatal(err)
+	}*/
+
 	if hex.EncodeToString(hello) != hex.EncodeToString(hello2) {
 		t.Fatal("byte array not match")
 	}

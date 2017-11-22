@@ -66,6 +66,10 @@ func (s *divinerService) CreateMarket(ctx context.Context, req *pbs.MarketCreate
 	return nil, nil
 }
 
+func (s *divinerService) Tx(ctx context.Context, req *pbs.TxRequest) (*pbs.TxResponse, error) {
+	return nil, nil
+}
+
 func main() {
 	conf, err := config.Load()
 	if err != nil {

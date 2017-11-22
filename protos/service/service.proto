@@ -46,6 +46,18 @@ message MarketInfoResponse {
   google.protobuf.Timestamp time = 999;
 }
 
+message TxRequest {
+  string user = 1;
+  bool isBuy = 2;
+  string share = 3;
+  double volume = 4;
+  common.Verification check = 999;
+}
+
+message TxResponse {
+  double price = 1;
+  google.protobuf.Timestamp time = 999;
+}
 
 service DivinerSerivce {
   rpc QueryMember (QueryRequest) returns (MemberInfoResponse) {}
@@ -56,4 +68,6 @@ service DivinerSerivce {
 
   rpc QueryMarket(QueryRequest) returns (MarketInfoResponse) {}
   rpc CreateMarket(MarketCreateRequest) returns (MarketInfoResponse) {}
+
+  rpc Tx(TxRequest) returns (TxResponse) {}
 }

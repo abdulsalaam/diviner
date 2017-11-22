@@ -86,3 +86,23 @@ func NewMarketCreateRequest(priv bccsp.Key, user, event string, num float64, fun
 		Check:  v,
 	}, nil
 }
+
+func NewTxCreateRequest(priv bccsp.Key, user string, buy bool, share string, volume float64) (*TxRequest, error) {
+	bytes, err := cast.ToBytes(user, buy, share, volume)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := pbc.NewVerification(priv, bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TxRequest{
+		User:   user,
+		IsBuy:  buy,
+		Share:  share,
+		Volume: volume,
+		Check:  v,
+	}, nil
+}
