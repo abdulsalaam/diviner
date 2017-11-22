@@ -87,7 +87,7 @@ func NewMarketCreateRequest(priv bccsp.Key, user, event string, num float64, fun
 	}, nil
 }
 
-func NewTxCreateRequest(priv bccsp.Key, user string, buy bool, share string, volume float64) (*TxRequest, error) {
+func NewTxRequest(priv bccsp.Key, user string, buy bool, share string, volume float64) (*TxRequest, error) {
 	bytes, err := cast.ToBytes(user, buy, share, volume)
 	if err != nil {
 		return nil, err

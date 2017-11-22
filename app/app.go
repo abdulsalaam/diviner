@@ -17,6 +17,7 @@ func main() {
 	rootCmd.AddCommand(cmd.NewMemberCmd())
 	rootCmd.AddCommand(cmd.NewEventCmd())
 	rootCmd.AddCommand(cmd.NewMarketCmd())
+	rootCmd.AddCommand(cmd.NewTxCmd())
 
 	rootCmd.PersistentPreRun = func(xcmd *cobra.Command, args []string) {
 		cmd.Init()
