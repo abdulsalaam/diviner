@@ -16,6 +16,16 @@ func BytesToFloat64(in []byte) (float64, error) {
 	return ret, nil
 }
 
+func StringsToBytes(in ...string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	for _, x := range in {
+		if err := binary.Write(buf, binary.LittleEndian, []byte(x)); err != nil {
+			return nil, err
+		}
+	}
+	return buf.Bytes(), nil
+}
+
 // ToBytes cast to byte array
 func ToBytes(in ...interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)

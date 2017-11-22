@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package service;
+
+import "common/common.proto";
+import "member/member.proto";
+import "lmsr/data.proto";
+import "google/protobuf/timestamp.proto";
+
+message QueryRequest {
+  string id = 1;
+  common.Verification check = 999;
+}
+message MemberCreateRequest {
+  member.Member member = 1;
+  common.Verification check = 999;
+}
+
+message MemberInfoResponse {
+  member.Member member = 1;
+  google.protobuf.Timestamp time = 999;
+}
+
+message EventCreateRequest {
+  string user = 1;
+  string title = 2;
+  repeated string outcome = 3;
+  common.Verification check = 999;
+}
+
+message EventInfoResponse {
+  lmsr.Event event = 1;
+  google.protobuf.Timestamp time = 999;
+}
+
+message MarketCreateRequest {
+  string user = 1;
+  string event = 2;
+  double num = 3;
+  bool isFund = 4;
+  common.Verification check = 999;
+}
+
+message MarketInfoResponse {
+  lmsr.Market market = 1;
+  google.protobuf.Timestamp time = 999;
+}
+
+
+service DivinerSerivce {
+  rpc QueryMember (QueryRequest) returns (MemberInfoResponse) {}
+  rpc CreateMember (MemberCreateRequest) returns (MemberInfoResponse) {}
+
+  rpc QueryEvent(QueryRequest) returns (EventInfoResponse) {}
+  rpc CreateEvent(EventCreateRequest) returns (EventInfoResponse) {}
+
+  rpc QueryMarket(QueryRequest) returns (MarketInfoResponse) {}
+  rpc CreateMarket(MarketCreateRequest) returns (MarketInfoResponse) {}
+}

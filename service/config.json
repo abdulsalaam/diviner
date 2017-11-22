@@ -1,0 +1,4 @@
+{
+  "protocol": "tcp",
+  "listen":  ":50051"
+}

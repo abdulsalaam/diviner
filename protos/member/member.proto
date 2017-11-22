@@ -2,28 +2,9 @@ syntax = "proto3";
 
 package member;
 
-
-import "common/common.proto";
-import "google/protobuf/timestamp.proto";
-
 message Member {
   string id = 1;
   string address = 2;
   double balance = 3;
   map<string, double> assets = 4;
-}
-
-message MemberCreateRequest {
-  Member member = 1;
-  common.Verification check = 2;
-}
-
-message MemberQueryRequest {
-  string id = 1;
-  common.Verification check = 2;
-}
-
-message MemberInfoResponse {
-  Member member = 1;
-  google.protobuf.Timestamp time = 999;
 }

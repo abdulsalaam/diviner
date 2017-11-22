@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package lmsr;
+
+/* Event */
+message Outcome {
+  string id = 1;
+  string title = 2;
+}
+
+message Event {
+  string id = 1;
+  string user = 2;
+  string title = 3;
+  repeated Outcome outcomes = 4;
+  string result = 5;
+  bool approved = 6;
+}
+
+/* Market */
+message Market {
+  string id = 1;
+  string user = 2;
+  string event = 3;
+  double liquidity = 4;
+  double fund = 5;
+  double cost = 6;
+  map<string, double> shares = 7;
+  map<string, double> prices = 8;
+  bool settled = 9;
+}
+
+message Markets {
+  repeated Market list = 1;
+}
+
+message Asset{
+  string id = 1;
+  double volume = 2;
+}
+
+message Assets {
+  repeated Asset list = 1;
+}
