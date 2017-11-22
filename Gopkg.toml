@@ -55,3 +55,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hyperledger/fabric-sdk-go"
+
+[[constraint]]
+  name = "github.com/cloudflare/cfssl"
+  branch = "master"
+
+[[constraint]]
+  name = "golang.org/x/sync"
+  branch = "master"
