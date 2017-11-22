@@ -27,8 +27,3 @@ message MemberInfoResponse {
   Member member = 1;
   google.protobuf.Timestamp time = 999;
 }
-
-service MemberService {
-  rpc Query(MemberQueryRequest) returns (MemberInfoResponse) {}
-  rpc Create(MemberCreateRequest) returns (MemberInfoResponse) {}
-}

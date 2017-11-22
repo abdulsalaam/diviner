@@ -39,11 +39,21 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 1. `peer channel update -o orderer.diviner.info:7050 -c divinerchannel -f ./channel-artifacts/DivinerMSPanchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem`
 
 #### chaincode
+##### member
 1. `peer chaincode install -n member -v 1.0 -p diviner/chaincode/member`
 2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n member -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
 
-## TOFix
-1. `Error: Error endorsing chaincode: rpc error: code = Unknown desc = error starting container: API error (400): {"message":"oci runtime error: container_linux.go:265: starting container process caused \"exec: \\\"chaincode\\\": executable file not found in $PATH\"\n"}` after upgrading fabric 1.1.0-preview docker images
+##### event
+1. `peer chaincode install -n event -v 1.0 -p diviner/chaincode/event`
+2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n event -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
+
+##### market
+1. `peer chaincode install -n market -v 1.0 -p diviner/chaincode/market`
+2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n market -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
+
+##### lmsr
+1. `peer chaincode install -n lmsr -v 1.0 -p diviner/chaincode/lmsr`
+2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n lmsr -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
 
 ## TODO
 1. Because can not handle concurrent transactions on a market, it needs an transaction queue for each market

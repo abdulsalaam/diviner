@@ -65,6 +65,7 @@ services:
         - ./vendor:/opt/gopath/src/diviner/vendor
         - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
         - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+        - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
     depends_on:
       - ca.diviner.info
       - orderer.diviner.info
