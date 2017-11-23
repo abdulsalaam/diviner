@@ -1,4 +1,15 @@
 {
   "protocol": "tcp",
-  "listen":  ":50051"
+  "listen":  ":50051",
+  "channel": "divinerchannel",
+  "user": "User1",
+  "fabric": "fabric_config.yaml",
+  "expired": 300,
+  "balance": 100000.0,
+  "chaincode": {
+    "member": "member",
+    "event": "event",
+    "market": "market",
+    "lmsr": "lmsr"
+  }
 }
