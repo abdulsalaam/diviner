@@ -59,3 +59,11 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 1. Because can not handle concurrent transactions on a market, it needs an transaction queue for each market
 2. Member management
 3. Mobile App
+
+## Docker Others
+* start: `docker-compose -f docker-compose-cli.yaml up -d`
+* stop: `docker-compose -f docker-compose-cli.yaml down`
+* login cli: `docker exec -it cli bash`
+* rm containers: `docker rm $(docker ps -aq)`
+* rm dev images: `docker rmi $(docker images --filter=reference='dev*' -q)`
+* rm all images: `dokcer rmi $(docker images -q)`

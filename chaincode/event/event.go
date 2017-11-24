@@ -42,9 +42,13 @@ func (evt *eventCC) create(stub shim.ChaincodeStubInterface, user, title string,
 		return ccc.Errorf("title is empty")
 	}
 
-	_, err := ccc.Find(stub, user)
-	if err != nil {
-		return ccc.Errore(err)
+	//_, err := ccc.Find(stub, user)
+	//if err != nil {
+	//	return ccc.Errore(err)
+	//}
+	resp := stub.InvokeChaincode("member", [][]byte{[]byte("query"), []byte(user)}, "")
+	if resp.Status != shim.OK {
+		return resp
 	}
 
 	event, err := pbe.NewEvent(user, title, outcomes...)
@@ -96,7 +100,7 @@ func (evt *eventCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		if len(params) < 4 {
 			return ccc.Errorf("args length error for create: %v", len(params))
 		}
-		return evt.create(stub, params[0], params[1], params[2:])
+		return ccc.SetEventAndReturn(stub, "testEvent", evt.create(stub, params[0], params[1], params[2:]))
 	case "approve":
 		if len(params) != 1 {
 			return ccc.Errorf("args length error for query: %v", len(params))

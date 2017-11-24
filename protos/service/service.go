@@ -91,6 +91,23 @@ func NewEventCreateRequest(priv bccsp.Key, user, title string, outcomes []string
 	}, nil
 }
 
+func CheckEventCreateRequest(req *EventCreateRequest, expired int64) (bool, error) {
+	if req.User != base58.Encode(req.Check.PublicKey) {
+		return false, fmt.Errorf("creator and caller are not match")
+	}
+
+	var tmp []string
+	tmp = append(tmp, req.User)
+	tmp = append(tmp, req.Title)
+	tmp = append(tmp, req.Outcome...)
+
+	if bytes, err := cast.StringsToBytes(tmp...); err != nil {
+		return false, nil
+	} else {
+		return pbc.Verify(req.Check, bytes, expired)
+	}
+}
+
 func NewMarketCreateRequest(priv bccsp.Key, user, event string, num float64, fund bool) (*MarketCreateRequest, error) {
 	bytes, err := cast.ToBytes(user, event, num, fund)
 	if err != nil {

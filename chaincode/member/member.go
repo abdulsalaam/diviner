@@ -45,7 +45,7 @@ func (cc *memberCC) create(stub shim.ChaincodeStubInterface, data []byte) pb.Res
 		return ccc.Errorf("id (%s) is existed", member.Id)
 	}
 
-	return ccc.PutStateAndReturn(stub, member.Id, data, nil)
+	return ccc.PutStateAndReturn(stub, member.Id, data, data)
 }
 
 func (cc *memberCC) update(stub shim.ChaincodeStubInterface, data []byte) pb.Response {
@@ -59,7 +59,7 @@ func (cc *memberCC) update(stub shim.ChaincodeStubInterface, data []byte) pb.Res
 		return ccc.Errore(err)
 	}
 
-	return ccc.PutStateAndReturn(stub, member.Id, data, nil)
+	return ccc.PutStateAndReturn(stub, member.Id, data, data)
 }
 
 // Init ...
@@ -79,9 +79,12 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	case "query":
 		return cc.query(stub, string(args[1]))
 	case "create":
+		if err := stub.SetEvent("testEvent", []byte("testEvent")); err != nil {
+			return shim.Error(err.Error())
+		}
 		return cc.create(stub, args[1])
 	case "update":
-		return cc.update(stub, args[1])
+		return ccc.SetEventAndReturn(stub, "testEvent", cc.update(stub, args[1]))
 	}
 
 	return ccc.Errorf("unknown function: %s", fcn)
