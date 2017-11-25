@@ -1,6 +1,7 @@
 package common
 
 import (
+	"diviner/common/cast"
 	"fmt"
 	"strings"
 
@@ -171,4 +172,9 @@ func SetEventAndReturn(stub shim.ChaincodeStubInterface, name string, resp pb.Re
 	}
 
 	return resp
+}
+
+func InvokeChaincodeWithString(stub shim.ChaincodeStubInterface, chaincodeName, channel string, args ...string) pb.Response {
+	tmp := cast.StringsToByteArray(args...)
+	return stub.InvokeChaincode(chaincodeName, tmp, channel)
 }
