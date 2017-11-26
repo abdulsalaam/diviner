@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func TestCreate(t *testing.T) {
-	evt, _ := pbl.NewEvent(m5.Id, title, outcomes[0], outcomes[1])
+func TestCreateEvent(t *testing.T) {
+	evt, _ := pbl.NewEvent(m2.Id, title, outcomes[0], outcomes[1])
 	bytes, _ := pbl.MarshalEvent(evt)
 
 	resp := ccc.MockInvoke(evtStub, []byte(create), bytes)
@@ -23,7 +23,7 @@ func TestCreate(t *testing.T) {
 		t.Fatal("data structure error: %v", err)
 	}
 
-	if event.User != m5.Id {
+	if event.User != m2.Id {
 		t.Fatal("user not match")
 	}
 
