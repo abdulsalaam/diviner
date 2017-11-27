@@ -121,7 +121,7 @@ func (cc *marketCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	switch fcn {
 	case "create":
 		if len != 4 {
-			return ccc.Errorf("args length error for create: %v", len)
+			return ccc.Errorf("aa aa args length error for create: %v", len)
 		}
 
 		flag := params[0]

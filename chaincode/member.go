@@ -3,6 +3,7 @@ package chaincode
 import (
 	ccc "diviner/chaincode/common"
 	pbm "diviner/protos/member"
+	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -62,14 +63,22 @@ func (cc *memberCC) update(stub shim.ChaincodeStubInterface, data []byte) pb.Res
 
 // Init ...
 func (cc *memberCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	logger := shim.NewLogger("Member")
+	logger.SetLevel(shim.LogDebug)
+	logger.Warning("Member init")
+	fmt.Println("Member Init fmt")
 	return shim.Success(nil)
 }
 
 // Invoke ...
 func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+	logger := shim.NewLogger("Member")
 	args := stub.GetArgs()
+	logger.Warningf("Member Invoke: ", args)
+	fmt.Println("Member Invoke fmt: ", args)
+
 	if len(args) != 2 {
-		return ccc.Errorf("args length error: %v", len(args))
+		return ccc.Errorf("member args length error: %v", len(args))
 	}
 
 	fcn := string(args[0])
@@ -77,12 +86,9 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	case "query":
 		return cc.query(stub, string(args[1]))
 	case "create":
-		if err := stub.SetEvent("testEvent", []byte("testEvent")); err != nil {
-			return shim.Error(err.Error())
-		}
 		return cc.create(stub, args[1])
 	case "update":
-		return ccc.SetEventAndReturn(stub, "testEvent", cc.update(stub, args[1]))
+		return cc.update(stub, args[1])
 	}
 
 	return ccc.Errorf("unknown function: %s", fcn)

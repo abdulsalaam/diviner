@@ -2,6 +2,7 @@ package chaincode
 
 import (
 	ccc "diviner/chaincode/common"
+	"strings"
 
 	pbl "diviner/protos/lmsr"
 
@@ -9,7 +10,8 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-type eventCC struct{}
+type eventCC struct {
+}
 
 // NewEventChaincode ...
 func NewEventChaincode() shim.Chaincode {
@@ -82,13 +84,20 @@ func (cc *eventCC) approve(stub shim.ChaincodeStubInterface, id string) pb.Respo
 }
 
 func (cc *eventCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	logger := shim.NewLogger("event")
+	logger.SetLevel(shim.LogDebug)
+	logger.Info("Event init")
 	return shim.Success(nil)
 }
 
 func (cc *eventCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+	logger := shim.NewLogger("event")
+	logger.SetLevel(shim.LogDebug)
 	args := stub.GetArgs()
+	logger.Infof("args = %v", args)
 	if len(args) != 2 {
-		return ccc.Errorf("args length error for event invoke: %v", len(args))
+		tmp := strings.Join(stub.GetStringArgs(), ",")
+		return ccc.Errorf("args length error for event invoke: %v, %q", len(args), tmp)
 	}
 
 	fcn := string(args[0])

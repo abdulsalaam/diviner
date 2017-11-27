@@ -32,14 +32,15 @@ func eventInvoke(fcn string, cmd *cobra.Command) {
 		if len(outcomes) < 2 {
 			log.Fatalf("length of outcomes error: %d", len(outcomes))
 		}
-		fmt.Println("member id ", member.Id)
+
 		req, err := pbs.NewEventCreateRequest(priv, member.Id, title, outcomes)
 		if err != nil {
 			log.Fatalf("genreate event create request error: %v\n", err)
 		}
 
 		resp, err := client.CreateEvent(context.Background(), req)
-		log.Println("event create", resp, err)
+		log.Println("event create - ", resp, err)
+		fmt.Println("event create x ", resp, err)
 	} // switch fcn
 }
 

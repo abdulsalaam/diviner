@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -116,27 +115,15 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 
 	defer client.Close()
 
-	eventID := "testEvent"
-	notifier := make(chan *apitxn.CCEvent)
-	rce := client.RegisterChaincodeEvent(notifier, "member", eventID)
-	defer client.UnregisterChaincodeEvent(rce)
-	tx, err := s.executeFabric(client, "member", "create", bytes)
+	_, err = s.executeFabric(client, "member", "create", bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("tx: ", tx.ID, tx.Nonce)
-	select {
-	case ccEvent := <-notifier:
-		fmt.Println(ccEvent.ChaincodeID, ccEvent.EventName, ccEvent.TxID, ccEvent.Payload)
-		return s.returnMemberInfoResponse(ccEvent.Payload)
-	case <-time.After(time.Second * 5):
-		fmt.Println("timeout for %s", eventID)
-		if bytes, err = s.queryFabricById(client, "member", "query", member.Id); err != nil {
-			return nil, err
-		} else {
-			return s.returnMemberInfoResponse(bytes)
-		}
+	if bytes, err := s.queryFabricById(client, "member", "query", member.Id); err != nil {
+		return nil, err
+	} else {
+		return s.returnMemberInfoResponse(bytes)
 	}
 
 }
@@ -180,36 +167,35 @@ func (s *divinerService) CreateEvent(ctx context.Context, req *pbs.EventCreateRe
 	} else if !ok {
 		return nil, fmt.Errorf("data is illegal")
 	}
-	fmt.Println("member id ", req.User)
+	fmt.Println("create event, member id ", req.User)
 	client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
 	if err != nil {
 		return nil, err
 	}
 
 	defer client.Close()
-	var data [][]byte
-	data = append(data, []byte(req.User))
-	data = append(data, []byte(req.Title))
-	for _, x := range req.Outcome {
-		data = append(data, []byte(x))
-	}
-
-	eventID := "test[a-zA-Z]+"
-	notifier := make(chan *apitxn.CCEvent)
-	rce := client.RegisterChaincodeEvent(notifier, "event", eventID)
-	defer client.UnregisterChaincodeEvent(rce)
-
-	_, err = s.executeFabric(client, "event", "create", data...)
+	event, err := pbl.NewEvent(req.User, req.Title, req.Outcome...)
 	if err != nil {
 		return nil, err
 	}
 
-	select {
-	case ccEvent := <-notifier:
-		fmt.Println(ccEvent.ChaincodeID, ccEvent.EventName, ccEvent.TxID, ccEvent.Payload)
-		return s.returnEventInfoResponse(ccEvent.Payload)
-	case <-time.After(time.Second * 5):
-		return nil, fmt.Errorf("timeout for %s", eventID)
+	fmt.Println("create event: event :", event)
+	data, err := pbl.MarshalEvent(event)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.executeFabric(client, "event", "create", data)
+	if err != nil {
+		fmt.Printf("execute fabric error: %v\n", err)
+		return nil, err
+	}
+
+	if bytes, err := s.queryFabricById(client, "event", "query", event.Id); err != nil {
+		fmt.Printf("query fabric error: %v\n", err)
+		return nil, err
+	} else {
+		return s.returnEventInfoResponse(bytes)
 	}
 
 }
