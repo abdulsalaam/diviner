@@ -1,19 +1,20 @@
-package main
+package chaincode
 
 import (
 	ccc "diviner/chaincode/common"
-
 	pbm "diviner/protos/member"
+	"fmt"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-type memberCC struct {
-}
+// MemberCC ...
+type memberCC struct{}
 
-func NewMemberChaincode() Mychaincode {
-	return &memberCC{}
+// NewMemberChaincode ...
+func NewMemberChaincode() shim.Chaincode {
+	return new(memberCC)
 }
 
 func (cc *memberCC) query(stub shim.ChaincodeStubInterface, id string) pb.Response {
@@ -60,20 +61,35 @@ func (cc *memberCC) update(stub shim.ChaincodeStubInterface, data []byte) pb.Res
 	return ccc.PutStateAndReturn(stub, member.Id, data, data)
 }
 
+// Init ...
+func (cc *memberCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	logger := shim.NewLogger("Member")
+	logger.SetLevel(shim.LogDebug)
+	logger.Warning("Member init")
+	fmt.Println("Member Init fmt")
+	return shim.Success(nil)
+}
+
 // Invoke ...
-func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface, fcn string, args [][]byte) pb.Response {
-	if len(args) != 1 {
-		return ccc.Errorf("args length for member invoke error: %d", len(args))
+func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+	logger := shim.NewLogger("Member")
+	args := stub.GetArgs()
+	logger.Warningf("Member Invoke: ", args)
+	fmt.Println("Member Invoke fmt: ", args)
+
+	if len(args) != 2 {
+		return ccc.Errorf("member args length error: %v", len(args))
 	}
 
+	fcn := string(args[0])
 	switch fcn {
 	case "query":
-		return cc.query(stub, string(args[0]))
+		return cc.query(stub, string(args[1]))
 	case "create":
-		return cc.create(stub, args[0])
+		return cc.create(stub, args[1])
 	case "update":
-		return cc.update(stub, args[0])
+		return cc.update(stub, args[1])
 	}
 
-	return ccc.Errorf("member unknown function: %s", fcn)
+	return ccc.Errorf("unknown function: %s", fcn)
 }
