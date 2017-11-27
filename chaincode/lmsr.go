@@ -13,6 +13,11 @@ type Mychaincode interface {
 
 type lmsrCC struct{}
 
+// NewLMSRChaincode ...
+func NewLMSRChaincode() shim.Chaincode {
+	return new(lmsrCC)
+}
+
 func (cc *lmsrCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(nil)
 }
@@ -32,6 +37,7 @@ func (cc *lmsrCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	case "member":
 		mycc = NewMemberChaincode()
 	case "event":
+		mycc = NewEventChaincode()
 	case "market":
 	case "tx":
 	}

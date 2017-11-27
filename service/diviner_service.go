@@ -23,16 +23,21 @@ type divinerService struct {
 	FabricConfig string
 	SDK          *fabapi.FabricSDK
 	ChannelID    string
+	Chaincode    string
 	User         string
 	Expired      int64
 	Balance      float64
 }
 
 func (s *divinerService) queryFabric(client apitxn.ChannelClient, chaincode, fcn string, data ...[]byte) ([]byte, error) {
+	var args [][]byte
+	args = append(args, []byte(chaincode))
+	args = append(args, data...)
+
 	qr := apitxn.QueryRequest{
-		ChaincodeID: chaincode,
+		ChaincodeID: s.Chaincode,
 		Fcn:         fcn,
-		Args:        data,
+		Args:        args,
 	}
 
 	return client.Query(qr)
@@ -43,10 +48,14 @@ func (s *divinerService) queryFabricById(client apitxn.ChannelClient, chaincode,
 }
 
 func (s *divinerService) executeFabric(client apitxn.ChannelClient, chaincode, fcn string, data ...[]byte) (apitxn.TransactionID, error) {
+	var args [][]byte
+	args = append(args, []byte(chaincode))
+	args = append(args, data...)
+
 	txr := apitxn.ExecuteTxRequest{
-		ChaincodeID: chaincode,
+		ChaincodeID: s.Chaincode,
 		Fcn:         fcn,
-		Args:        data,
+		Args:        args,
 	}
 
 	return client.ExecuteTx(txr)
@@ -229,6 +238,7 @@ func main() {
 	service := &divinerService{
 		FabricConfig: conf.GetString("fabric"),
 		ChannelID:    conf.GetString("channel"),
+		Chaincode:    conf.GetString("chaincode"),
 		User:         conf.GetString("user"),
 		Expired:      conf.GetInt64("expired"),
 		Balance:      conf.GetFloat64("balance"),

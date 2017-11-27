@@ -6,10 +6,5 @@
   "fabric": "fabric_config.yaml",
   "expired": 300,
   "balance": 100000.0,
-  "chaincode": {
-    "member": "member",
-    "event": "event",
-    "market": "market",
-    "lmsr": "lmsr"
-  }
+  "chaincode": "lmsr"
 }
