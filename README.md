@@ -39,21 +39,23 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 1. `peer channel update -o orderer.diviner.info:7050 -c divinerchannel -f ./channel-artifacts/DivinerMSPanchors.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem`
 
 #### chaincode
-##### member
-1. `peer chaincode install -n member -v 1.0 -p diviner/chaincode/member`
-2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n member -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
-
-##### event
-1. `peer chaincode install -n event -v 1.0 -p diviner/chaincode/event`
-2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n event -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
-
-##### market
-1. `peer chaincode install -n market -v 1.0 -p diviner/chaincode/market`
-2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n market -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
-
-##### lmsr
-1. `peer chaincode install -n lmsr -v 1.0 -p diviner/chaincode/lmsr`
+1. `peer chaincode install -n lmsr -v 1.0 -p diviner/chaincode`
 2. `peer chaincode instantiate -o orderer.diviner.info:7050 --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem -C divinerchannel -n lmsr -v 1.0 -c '{"Args":[]}' -P "OR ('DivinerMSP.member')"`
+
+## App
+### member
+1. `go run app.go member create --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
+2. `go run app.go member create --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
+3. `go run app.go member query --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
+4. `go run app.go member query --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
+
+### event
+1. `go run app.go event create --title gogo --outcome yes --outcome no --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
+2. `go run app.go event query --id a124ddec-a673-437c-be5c-0c54bdf58366 --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
+
+## market
+1. `go run app.go market create --event a124ddec-a673-437c-be5c-0c54bdf58366 --number 10000 --fund --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
+2. `go run app.go market query --id a124ddec-a673-437c-be5c-0c54bdf58366#3981d198-ca8f-4f33-a0aa-19a6466ce984 --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
 
 ## TODO
 1. Because can not handle concurrent transactions on a market, it needs an transaction queue for each market

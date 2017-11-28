@@ -128,6 +128,18 @@ func NewMarketCreateRequest(priv bccsp.Key, user, event string, num float64, fun
 	}, nil
 }
 
+func CheckMarketCreateRequest(req *MarketCreateRequest, expired int64) (bool, error) {
+	if req.User != base58.Encode(req.Check.PublicKey) {
+		return false, fmt.Errorf("creator and caller are not match")
+	}
+
+	if bytes, err := cast.ToBytes(req.User, req.Event, req.Num, req.IsFund); err != nil {
+		return false, nil
+	} else {
+		return pbc.Verify(req.Check, bytes, expired)
+	}
+}
+
 func NewTxRequest(priv bccsp.Key, user string, buy bool, share string, volume float64) (*TxRequest, error) {
 	bytes, err := cast.ToBytes(user, buy, share, volume)
 	if err != nil {
