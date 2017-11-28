@@ -91,9 +91,9 @@ func (cc *eventCC) Invoke(stub shim.ChaincodeStubInterface, fcn string, args [][
 	case "query":
 		return cc.query(stub, string(args[0]))
 	case "create":
-		return cc.create(stub, args[0])
+		return ccc.SetEventAndReturn(stub, ccc.ChaincodeEventID(stub, "event"), cc.create(stub, args[0]))
 	case "approve":
-		return cc.approve(stub, string(args[0]))
+		return ccc.SetEventAndReturn(stub, ccc.ChaincodeEventID(stub, "event"), cc.approve(stub, string(args[0])))
 	}
 
 	return ccc.Errorf("event unknown function: %s", fcn)

@@ -3,6 +3,7 @@ package cast
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 )
 
 // BytesToFloat64 cast byte array to float64
@@ -14,6 +15,14 @@ func BytesToFloat64(in []byte) (float64, error) {
 		return 0.0, err
 	}
 	return ret, nil
+}
+
+func BytesToBool(in []byte) (bool, error) {
+	if len(in) != 1 {
+		return false, fmt.Errorf("in length error: %d", len(in))
+	}
+
+	return in[0] != 0, nil
 }
 
 func StringsToBytes(in ...string) ([]byte, error) {

@@ -174,10 +174,6 @@ func SetEventAndReturn(stub shim.ChaincodeStubInterface, name string, resp pb.Re
 	return resp
 }
 
-func ChaincodeEventID(stub shim.ChaincodeStubInterface, name string) string {
-	return name + stub.GetTxID()
-}
-
 func InvokeChaincodeWithString(stub shim.ChaincodeStubInterface, chaincodeName, channel string, args ...string) pb.Response {
 	tmp := cast.StringsToByteArray(args...)
 	return stub.InvokeChaincode(chaincodeName, tmp, channel)

@@ -33,9 +33,32 @@ func TestCast(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ToBytes(false)
+	x1, err := ToBytes(false)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	x2, err := BytesToBool(x1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if x2 != false {
+		t.Fatalf("data not match: %v, %v", x2, false)
+	}
+
+	x1, err = ToBytes(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	x2, err = BytesToBool(x1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if x2 != true {
+		t.Fatalf("data not match: %v, %v", x2, true)
 	}
 
 	/*_, err = ToBytes(123)

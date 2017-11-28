@@ -9,7 +9,6 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 
 	ccc "diviner/chaincode/common"
-	pbl "diviner/protos/lmsr"
 	pbm "diviner/protos/member"
 )
 
@@ -39,7 +38,6 @@ var (
 	m2 *pbm.Member
 	m3 *pbm.Member
 
-	event0   *pbl.Event
 	title    = "gogogo"
 	outcomes = []string{"yes", "no"}
 )

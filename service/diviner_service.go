@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
@@ -121,20 +122,30 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 	if err != nil {
 		return nil, err
 	}
-
 	defer client.Close()
+
+	ccEvent := "member([a-zA-Z0-9]+)"
+	notifier := make(chan *apitxn.CCEvent)
+	rce := client.RegisterChaincodeEvent(notifier, s.Chaincode, ccEvent)
+	defer client.UnregisterChaincodeEvent(rce)
 
 	_, err = s.executeFabric(client, "member", "create", bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	if bytes, err := s.queryFabricById(client, "member", "query", member.Id); err != nil {
-		return nil, err
-	} else {
-		return s.returnMemberInfoResponse(bytes)
+	select {
+	case evt := <-notifier:
+		log.Println("get notifier")
+		return s.returnMemberInfoResponse(evt.Payload)
+	case <-time.After(time.Second * 5):
+		log.Println("timeout")
+		if bytes, err := s.queryFabricById(client, "member", "query", member.Id); err != nil {
+			return nil, err
+		} else {
+			return s.returnMemberInfoResponse(bytes)
+		}
 	}
-
 }
 
 func (s *divinerService) returnEventInfoResponse(bytes []byte) (*pbs.EventInfoResponse, error) {
