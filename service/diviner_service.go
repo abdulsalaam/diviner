@@ -32,9 +32,9 @@ type divinerService struct {
 	Balance      float64
 }
 
-func (s *divinerService) queryFabric(client apitxn.ChannelClient, chaincode, fcn string, data ...[]byte) ([]byte, error) {
+func (s *divinerService) queryFabric(client apitxn.ChannelClient, module, fcn string, data ...[]byte) ([]byte, error) {
 	var args [][]byte
-	args = append(args, []byte(chaincode))
+	args = append(args, []byte(module))
 	args = append(args, data...)
 
 	qr := apitxn.QueryRequest{
@@ -46,13 +46,13 @@ func (s *divinerService) queryFabric(client apitxn.ChannelClient, chaincode, fcn
 	return client.Query(qr)
 }
 
-func (s *divinerService) queryFabricById(client apitxn.ChannelClient, chaincode, fcn, id string) ([]byte, error) {
-	return s.queryFabric(client, chaincode, fcn, []byte(id))
+func (s *divinerService) queryFabricById(client apitxn.ChannelClient, module, fcn, id string) ([]byte, error) {
+	return s.queryFabric(client, module, fcn, []byte(id))
 }
 
-func (s *divinerService) executeFabric(client apitxn.ChannelClient, chaincode, fcn string, data ...[]byte) (apitxn.TransactionID, error) {
+func (s *divinerService) executeFabric(client apitxn.ChannelClient, module, fcn string, data ...[]byte) (apitxn.TransactionID, error) {
 	var args [][]byte
-	args = append(args, []byte(chaincode))
+	args = append(args, []byte(module))
 	args = append(args, data...)
 
 	txr := apitxn.ExecuteTxRequest{
