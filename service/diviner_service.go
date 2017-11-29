@@ -28,6 +28,7 @@ type divinerService struct {
 	Chaincode    string
 	User         string
 	Expired      int64
+	Wait         time.Duration
 	Balance      float64
 }
 
@@ -228,7 +229,7 @@ func (s *divinerService) CreateEvent(ctx context.Context, req *pbs.EventCreateRe
 		return nil, err
 	}
 
-	if bytes := s.selectEvent(notifier, 5); bytes != nil {
+	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
 		return s.returnEventInfoResponse(bytes)
 	} else {
 		if bytes, err := s.queryFabricById(client, "event", "query", event.Id); err != nil {
@@ -295,9 +296,7 @@ func (s *divinerService) CreateMarket(ctx context.Context, req *pbs.MarketCreate
 	}
 	defer client.Close()
 
-	ccEventID := "market([a-zA-Z0-9]+)"
-	notifier := make(chan *apitxn.CCEvent)
-	rce := client.RegisterChaincodeEvent(notifier, s.Chaincode, ccEventID)
+	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "market")
 	defer client.UnregisterChaincodeEvent(rce)
 
 	_, err = s.executeFabric(client, "market", "create", []byte(req.User), []byte(req.Event), num, flag)
@@ -306,18 +305,62 @@ func (s *divinerService) CreateMarket(ctx context.Context, req *pbs.MarketCreate
 		return nil, err
 	}
 
-	select {
-	case evt := <-notifier:
-		log.Println("get notifier")
-		return s.returnMarketInfoResponse(evt.Payload)
-	case <-time.After(time.Second * 5):
-		log.Println("timeout")
+	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
+		return s.returnMarketInfoResponse(bytes)
+	} else {
 		return nil, fmt.Errorf("can not get event notify")
 	}
 }
 
+func (s *divinerService) returnTxResponse(data []byte) (*pbs.TxResponse, error) {
+	if price, err := cast.BytesToFloat64(data); err != nil {
+		return nil, err
+	} else {
+		return &pbs.TxResponse{
+			Price: price,
+			Time:  ptypes.TimestampNow(),
+		}, nil
+	}
+}
+
 func (s *divinerService) Tx(ctx context.Context, req *pbs.TxRequest) (*pbs.TxResponse, error) {
-	return nil, nil
+	if ok, err := pbs.CheckTxRequest(req, s.Expired); err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, fmt.Errorf("data is illegal")
+	}
+
+	volume, err := cast.ToBytes(req.Volume)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	var cmd string
+	if req.IsBuy {
+		cmd = "buy"
+	} else {
+		cmd = "sell"
+	}
+
+	_, err = s.executeFabric(client, "tx", cmd, []byte(req.User), []byte(req.Share), volume)
+	if err != nil {
+		return nil, err
+	}
+
+	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "tx")
+	defer client.UnregisterChaincodeEvent(rce)
+
+	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
+		return s.returnTxResponse(bytes)
+	} else {
+		return nil, fmt.Errorf("can not get event notify")
+	}
 }
 
 func main() {
@@ -340,6 +383,7 @@ func main() {
 		Chaincode:    conf.GetString("chaincode"),
 		User:         conf.GetString("user"),
 		Expired:      conf.GetInt64("expired"),
+		Wait:         time.Duration(conf.GetInt64("wait")),
 		Balance:      conf.GetFloat64("balance"),
 	}
 

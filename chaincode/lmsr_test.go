@@ -18,6 +18,10 @@ var (
 	fcnUpdate  = []byte("update")
 	fcnApprove = []byte("approve")
 	fcnSettle  = []byte("settle")
+	fcnMarkets = []byte("markets")
+	fcnAssets  = []byte("assets")
+	fcnBuy     = []byte("buy")
+	fcnSell    = []byte("sell")
 
 	ccMember = []byte("member")
 	ccEvent  = []byte("event")

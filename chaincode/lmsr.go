@@ -46,6 +46,7 @@ func (cc *lmsrCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	case "market":
 		mycc = NewMarketChaincode()
 	case "tx":
+		mycc = NewTxChaincode()
 	}
 
 	if mycc != nil {

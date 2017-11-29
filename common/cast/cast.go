@@ -65,3 +65,12 @@ func StringsToByteArray(args ...string) [][]byte {
 
 	return result
 }
+
+func ByteArrayToStrings(in [][]byte) []string {
+	result := make([]string, len(in))
+	for i, x := range in {
+		result[i] = string(x)
+	}
+
+	return result
+}

@@ -102,7 +102,7 @@ func CheckEventCreateRequest(req *EventCreateRequest, expired int64) (bool, erro
 	tmp = append(tmp, req.Outcome...)
 
 	if bytes, err := cast.StringsToBytes(tmp...); err != nil {
-		return false, nil
+		return false, err
 	} else {
 		return pbc.Verify(req.Check, bytes, expired)
 	}
@@ -134,7 +134,7 @@ func CheckMarketCreateRequest(req *MarketCreateRequest, expired int64) (bool, er
 	}
 
 	if bytes, err := cast.ToBytes(req.User, req.Event, req.Num, req.IsFund); err != nil {
-		return false, nil
+		return false, err
 	} else {
 		return pbc.Verify(req.Check, bytes, expired)
 	}
@@ -158,4 +158,16 @@ func NewTxRequest(priv bccsp.Key, user string, buy bool, share string, volume fl
 		Volume: volume,
 		Check:  v,
 	}, nil
+}
+
+func CheckTxRequest(req *TxRequest, expired int64) (bool, error) {
+	if req.User != base58.Encode(req.Check.PublicKey) {
+		return false, fmt.Errorf("user are not match")
+	}
+
+	if bytes, err := cast.ToBytes(req.User, req.IsBuy, req.Share, req.Volume); err != nil {
+		return false, err
+	} else {
+		return pbc.Verify(req.Check, bytes, expired)
+	}
 }
