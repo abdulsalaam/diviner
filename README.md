@@ -50,7 +50,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
     the balance is *99937.98854930417* and have asset *4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed#4f2107e3-6aa8-45b0-8419-fe8c492756d5@0#aSq9DsNNvGhYxYyqA9wd2eduEAZ5AXWgJTbTJAb2Wjq7bj9GGAWwADm9W2UknFWmZhqxd2G21L9WTXyxSHfeR8z1moeVjHNjEFmRqHFRBPC8ckqwSfsKJZc814kR* with volume *100*
 
 ### Clean all data
-1. go to **diviner/fixtures** and run `./teardown.sh` to clean all container and dev images.
+1. go to **diviner/fixtures** and run `./teardown.sh` to remove all container and dev images.
 
 ### Other commands
 * Query Member: `go run app.go member query --ski [private key]`
@@ -78,7 +78,7 @@ Because all files are in folder, you may not run all steps in **preparation**
 6. `configtxgen -profile DivinerChannel -outputAnchorPeersUpdate ./channel-artifacts/DivinerMSPanchors.tx -channelID divinerchannel -asOrg DivinerMSP`
 
 
-The cli container will run **scripts/script.sh** to initialize all environment when starting. The detail is following:
+The cli container will run **scripts/script.sh** to initialize environment when starting. The detail is following:
 
 ### join channel
 1. `peer channel create -o orderer.diviner.info:7050 -c divinerchannel -f ./channel-artifacts/diviner_channel.tx --tls $CORE_PEER_TLS_ENABLED --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/diviner.info/orderers/orderer.diviner.info/msp/tlscacerts/tlsca.diviner.info-cert.pem`
