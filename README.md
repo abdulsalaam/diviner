@@ -22,7 +22,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
   * `go run app.go member create --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
   * `go run app.go member create --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
 
-2. create event: `go run app.go event create --title title --outcome outcome1 --outcome outcome2 --ski [private key]`
+2. create event: `go run app.go event create --title [title] --outcome [outcome1] --outcome [outcome2] --ski [private key]`
   * `go run app.go event create --title gogo --outcome yes --outcome no --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
 
     ps: remember the event id on screen like: `event:<id:"4f2107e3-6aa8-45b0-8419-fe8c492756d5" .... >` (the event id is *4f2107e3-6aa8-45b0-8419-fe8c492756d5*)
@@ -30,7 +30,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 3. create market: `go run app.go market create --event [event_id got from  step2] --number 100 --ski [private key]`
   * `go run app.go market create --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1 --event 4f2107e3-6aa8-45b0-8419-fe8c492756d5 --number 100`
 
-    ps: *a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1* is the event id got from step2
+    ps: *4f2107e3-6aa8-45b0-8419-fe8c492756d5* is the event id got from step2
 
     ps: remember the market and share id on screen like: ` market:<id:"4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed" ... event:"4f2107e3-6aa8-45b0-8419-fe8c492756d5" liquidity:100 fund:69.31471805599453 cost:69.31471805599453 shares:<key:"4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed#4f2107e3-6aa8-45b0-8419-fe8c492756d5@0" value:0 > shares:<key:"4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed#4f2107e3-6aa8-45b0-8419-fe8c492756d5@1" value:0 > ... >` (the market id is *4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed*, **yes** share id is *4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed#4f2107e3-6aa8-45b0-8419-fe8c492756d5@0*, and **no** share id is *4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed#4f2107e3-6aa8-45b0-8419-fe8c492756d5@1*)
 
