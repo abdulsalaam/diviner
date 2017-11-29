@@ -18,11 +18,11 @@ var (
 	conn   *grpc.ClientConn
 	client pbs.DivinerSerivceClient
 
-	eventId  = ""
+	eventID  = ""
 	title    = ""
 	outcomes []string
 
-	marketId = ""
+	marketID = ""
 	number   = 0.0
 	isFund   = false
 )

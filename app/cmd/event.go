@@ -13,11 +13,11 @@ import (
 func eventInvoke(fcn string, cmd *cobra.Command) {
 	switch fcn {
 	case "query":
-		if eventId == "" {
-			log.Fatalf("event id error: %q\n", eventId)
+		if eventID == "" {
+			log.Fatalf("event id error: %q\n", eventID)
 		}
 
-		req, err := pbs.NewQueryRequest(priv, eventId)
+		req, err := pbs.NewQueryRequest(priv, eventID)
 		if err != nil {
 			log.Fatalf("genreate query request error: %v\n", err)
 		}
@@ -59,7 +59,7 @@ func NewEventCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&eventId, "id", "", "event id")
+	cmd.Flags().StringVar(&eventID, "id", "", "event id")
 	cmd.Flags().StringVar(&title, "title", "", "event title")
 	cmd.Flags().StringSliceVar(&outcomes, "outcome", []string{}, "outcomes for event")
 
