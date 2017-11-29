@@ -13,7 +13,7 @@ import (
 
 // Errorf ...
 func Errorf(format string, a ...interface{}) pb.Response {
-	return shim.Error(fmt.Sprintf(format, a))
+	return shim.Error(fmt.Sprintf(format, a...))
 }
 
 // Errore ...
@@ -54,31 +54,32 @@ func GetStateByCompositeKeyAndCheck(stub shim.ChaincodeStubInterface, name strin
 	return result, true, nil
 }
 
-// PutMessageAndReturn
+// PutMessage ...
 func PutMessage(stub shim.ChaincodeStubInterface, key string, msg proto.Message) ([]byte, error) {
-	if bytes, err := proto.Marshal(msg); err != nil {
+	bytes, err := proto.Marshal(msg)
+	if err != nil {
 		return nil, err
-	} else {
-		return bytes, stub.PutState(key, bytes)
 	}
+	return bytes, stub.PutState(key, bytes)
 }
 
 // PutMessageWithCompositeKey ...
 func PutMessageWithCompositeKey(stub shim.ChaincodeStubInterface, msg proto.Message, name string, keys ...string) ([]byte, error) {
-	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
+	key, err := stub.CreateCompositeKey(name, keys)
+	if err != nil {
 		return nil, err
-	} else {
-		return PutMessage(stub, key, msg)
 	}
+	return PutMessage(stub, key, msg)
 }
 
-// PutStateByCompositeKey
+// PutStateByCompositeKey ...
 func PutStateByCompositeKey(stub shim.ChaincodeStubInterface, value []byte, name string, keys ...string) error {
-	if key, err := stub.CreateCompositeKey(name, keys); err != nil {
+	key, err := stub.CreateCompositeKey(name, keys)
+
+	if err != nil {
 		return err
-	} else {
-		return stub.PutState(key, value)
 	}
+	return stub.PutState(key, value)
 }
 
 // PutStateAndReturn ...
@@ -93,20 +94,21 @@ func PutStateAndReturn(stub shim.ChaincodeStubInterface, key string, value, payl
 
 // PutMessageAndReturn ..
 func PutMessageAndReturn(stub shim.ChaincodeStubInterface, key string, msg proto.Message) pb.Response {
-	if bytes, err := PutMessage(stub, key, msg); err != nil {
+	bytes, err := PutMessage(stub, key, msg)
+	if err != nil {
 		return Errore(err)
-	} else {
-		return shim.Success(bytes)
 	}
+	return shim.Success(bytes)
 }
 
 // MarshalAndReturn ...
 func MarshalAndReturn(msg proto.Message) pb.Response {
-	if bytes, err := proto.Marshal(msg); err != nil {
+	bytes, err := proto.Marshal(msg)
+
+	if err != nil {
 		return Errore(err)
-	} else {
-		return shim.Success(bytes)
 	}
+	return shim.Success(bytes)
 }
 
 // OK ...
@@ -114,7 +116,7 @@ func OK(resp *pb.Response) bool {
 	return resp.Status == shim.OK
 }
 
-// NotOK
+// NotOK ...
 func NotOK(resp *pb.Response) bool {
 	return !(resp.Status == shim.OK)
 }
@@ -131,6 +133,7 @@ func Find(stub shim.ChaincodeStubInterface, id string) ([]byte, error) {
 	return bytes, nil
 }
 
+// GetOneValue ...
 func GetOneValue(x map[string][]byte) []byte {
 	if x == nil || len(x) > 0 {
 		for _, v := range x {
@@ -164,11 +167,12 @@ func FindAllByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string,
 	return nil, err
 }
 
+// SetEventAndReturn ...
 func SetEventAndReturn(stub shim.ChaincodeStubInterface, name string, resp pb.Response) pb.Response {
 	if OK(&resp) && resp.Payload != nil {
-		evtId := chaincodeEventID(stub, name)
+		evtID := chaincodeEventID(stub, name)
 
-		if err := stub.SetEvent(evtId, resp.Payload); err != nil {
+		if err := stub.SetEvent(evtID, resp.Payload); err != nil {
 			return Errorf("set event %s error: %v", name, err)
 		}
 	}
@@ -180,6 +184,7 @@ func chaincodeEventID(stub shim.ChaincodeStubInterface, name string) string {
 	return name + stub.GetTxID()
 }
 
+// InvokeChaincodeWithString ...
 func InvokeChaincodeWithString(stub shim.ChaincodeStubInterface, chaincodeName, channel string, args ...string) pb.Response {
 	tmp := cast.StringsToByteArray(args...)
 	return stub.InvokeChaincode(chaincodeName, tmp, channel)

@@ -20,6 +20,7 @@ func NewLMSRChaincode() shim.Chaincode {
 	return new(lmsrCC)
 }
 
+// Init ...
 func (cc *lmsrCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	logger.Debug("init lmsr chaincode")
 	return shim.Success(nil)
