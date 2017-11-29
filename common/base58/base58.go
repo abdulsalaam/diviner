@@ -1,3 +1,4 @@
+/* copy from https://github.com/btcsuite/btcutil/tree/master/base58 */
 package base58
 
 import (
