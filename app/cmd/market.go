@@ -48,6 +48,7 @@ func maketInvoke(fcn string, cmd *cobra.Command) {
 	} // switch fcn
 }
 
+// NewMarketCmd ...
 func NewMarketCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "market [query|create]",
@@ -55,7 +56,7 @@ func NewMarketCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fcn := args[0]
 			if fcn != "query" && fcn != "create" {
-				log.Fatalf("command error: %s\n")
+				log.Fatalf("command error: %s\n", fcn)
 			}
 
 			maketInvoke(fcn, cmd)

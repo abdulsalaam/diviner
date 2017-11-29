@@ -9,7 +9,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 4. [Prediction Market (en)](https://en.wikipedia.org/wiki/Prediction_market)
 5. [Prediction Market (ch)](https://zh.wikipedia.org/wiki/%E9%A2%84%E6%B5%8B%E5%B8%82%E5%9C%BA)
 
-## How to run it
+## How to Run
 1. clone this project: `git clone git@github.com:kigichang/diviner.git`
 2. go to folder **diviner/fixtures**
 3. start fabric environment: `./start.sh`
@@ -17,7 +17,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 5. open a new terminal, go to **diviner/service**, and start middle service: `go run diviner_service.go`
 6. open a new terminal, go to **diviner/app**, and play. :)
 
-### How to play
+### How to Play
 1. create member: `go run app.go member create --ski [private key]`
   * `go run app.go member create --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
   * `go run app.go member create --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
@@ -49,10 +49,10 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 
     the balance is *99937.98854930417* and have asset *4f2107e3-6aa8-45b0-8419-fe8c492756d5#58c77b4c-f686-4170-a78a-0d96308496ed#4f2107e3-6aa8-45b0-8419-fe8c492756d5@0#aSq9DsNNvGhYxYyqA9wd2eduEAZ5AXWgJTbTJAb2Wjq7bj9GGAWwADm9W2UknFWmZhqxd2G21L9WTXyxSHfeR8z1moeVjHNjEFmRqHFRBPC8ckqwSfsKJZc814kR* with volume *100*
 
-### Clean all data
+### Clean All Data
 1. go to **diviner/fixtures** and run `./teardown.sh` to remove all container and dev images.
 
-### Other commands
+### Other Commands
 * Query Member: `go run app.go member query --ski [private key]`
   1. `go run app.go member query --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
   2. `go run app.go member query --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`

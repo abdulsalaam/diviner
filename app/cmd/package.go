@@ -27,6 +27,7 @@ var (
 	isFund   = false
 )
 
+// Init ...
 func Init() {
 	var err error
 	ski := viper.GetString("ski")
@@ -48,6 +49,7 @@ func Init() {
 	client = pbs.NewDivinerSerivceClient(conn)
 }
 
+// CloseConnection ...
 func CloseConnection() {
 	if conn != nil {
 		conn.Close()

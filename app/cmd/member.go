@@ -30,6 +30,7 @@ func memberInvoke(fcn string) {
 	} // switch fcn
 }
 
+// NewMemberCmd ...
 func NewMemberCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "member [query|create]",

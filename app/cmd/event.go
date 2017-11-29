@@ -44,6 +44,7 @@ func eventInvoke(fcn string, cmd *cobra.Command) {
 	} // switch fcn
 }
 
+// NewEventCmd ...
 func NewEventCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "event [query|create]",
@@ -51,7 +52,7 @@ func NewEventCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fcn := args[0]
 			if fcn != "query" && fcn != "create" {
-				log.Fatalf("command error: %s\n")
+				log.Fatalf("command error: %s\n", fcn)
 			}
 
 			eventInvoke(fcn, cmd)

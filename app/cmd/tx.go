@@ -21,6 +21,7 @@ func txInvoke(fcn, share string, volume float64) {
 	log.Println("tx ", fcn, resp, err)
 }
 
+// NewTxCmd ...
 func NewTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "tx [buy|sell] share volume",
@@ -34,7 +35,7 @@ func NewTxCmd() *cobra.Command {
 			}
 
 			if fcn != "buy" && fcn != "sell" {
-				log.Fatalf("command error: %s\n")
+				log.Fatalf("command error: %s\n", fcn)
 			}
 
 			txInvoke(fcn, share, volume)
