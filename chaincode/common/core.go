@@ -166,7 +166,9 @@ func FindAllByPartialCompositeKey(stub shim.ChaincodeStubInterface, name string,
 
 func SetEventAndReturn(stub shim.ChaincodeStubInterface, name string, resp pb.Response) pb.Response {
 	if OK(&resp) && resp.Payload != nil {
-		if err := stub.SetEvent(name, resp.Payload); err != nil {
+		evtId := chaincodeEventID(stub, name)
+
+		if err := stub.SetEvent(evtId, resp.Payload); err != nil {
 			return Errorf("set event %s error: %v", name, err)
 		}
 	}
@@ -174,7 +176,7 @@ func SetEventAndReturn(stub shim.ChaincodeStubInterface, name string, resp pb.Re
 	return resp
 }
 
-func ChaincodeEventID(stub shim.ChaincodeStubInterface, name string) string {
+func chaincodeEventID(stub shim.ChaincodeStubInterface, name string) string {
 	return name + stub.GetTxID()
 }
 

@@ -70,9 +70,9 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface, fcn string, args []
 	case "query":
 		return cc.query(stub, string(args[0]))
 	case "create":
-		return ccc.SetEventAndReturn(stub, ccc.ChaincodeEventID(stub, "member"), cc.create(stub, args[0]))
+		return ccc.SetEventAndReturn(stub, "member", cc.create(stub, args[0]))
 	case "update":
-		return ccc.SetEventAndReturn(stub, ccc.ChaincodeEventID(stub, "member"), cc.update(stub, args[0]))
+		return ccc.SetEventAndReturn(stub, "member", cc.update(stub, args[0]))
 	}
 
 	return ccc.Errorf("member unknown function: %s", fcn)

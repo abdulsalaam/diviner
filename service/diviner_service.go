@@ -348,14 +348,12 @@ func (s *divinerService) Tx(ctx context.Context, req *pbs.TxRequest) (*pbs.TxRes
 		cmd = "sell"
 	}
 
+	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "tx")
+	defer client.UnregisterChaincodeEvent(rce)
 	_, err = s.executeFabric(client, "tx", cmd, []byte(req.User), []byte(req.Share), volume)
 	if err != nil {
 		return nil, err
 	}
-
-	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "tx")
-	defer client.UnregisterChaincodeEvent(rce)
-
 	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
 		return s.returnTxResponse(bytes)
 	} else {

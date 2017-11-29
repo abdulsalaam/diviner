@@ -23,7 +23,7 @@ func txInvoke(fcn, share string, volume float64) {
 
 func NewTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "tx [buy|sell]",
+		Use:  "tx [buy|sell] share volume",
 		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			fcn := args[0]

@@ -120,7 +120,7 @@ func (cc *marketCC) Invoke(stub shim.ChaincodeStubInterface, fcn string, args []
 		user := string(args[0])
 		event := string(args[1])
 
-		return ccc.SetEventAndReturn(stub, ccc.ChaincodeEventID(stub, "market"), cc.create(stub, user, event, num, flag))
+		return ccc.SetEventAndReturn(stub, "market", cc.create(stub, user, event, num, flag))
 
 	case "query":
 		if len != 1 {
