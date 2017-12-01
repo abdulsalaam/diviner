@@ -162,6 +162,7 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 		return s.returnMemberInfoResponse(bytes)
 	}
 
+	log.Println("time out")
 	bytes, err = s.queryFabricByID(client, "member", "query", member.Id)
 	if err != nil {
 		return nil, err
