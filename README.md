@@ -10,6 +10,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 5. [Prediction Market (ch)](https://zh.wikipedia.org/wiki/%E9%A2%84%E6%B5%8B%E5%B8%82%E5%9C%BA)
 
 ## How to Run
+0. Install golang and Hyperledger Fabric docker images.
 1. clone this project: `git clone git@github.com:kigichang/diviner.git`
 2. go to folder **diviner/fixtures**
 3. start fabric environment: `./start.sh`
@@ -18,7 +19,6 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 6. open a new terminal, go to **diviner/app**, and play. :)
 
 ### How to Play
-0. Install golang and Hyperledger Fabric docker images.
 1. create member: `go run app.go member create --ski [private key]`
   * `go run app.go member create --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
   * `go run app.go member create --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
