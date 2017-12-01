@@ -18,6 +18,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 6. open a new terminal, go to **diviner/app**, and play. :)
 
 ### How to Play
+0. Install golang and Hyperledger Fabric docker images.
 1. create member: `go run app.go member create --ski [private key]`
   * `go run app.go member create --ski a7145e9a7b7bea5907bb022333beaac24bc4095d17f417f262b543de2c54bed1`
   * `go run app.go member create --ski f306ad8811b1d1649bf96d3faeffd7d0c3a21a1fc855481adc7b9be52c596ed6`
