@@ -37,16 +37,18 @@ func (s *divinerService) queryFabric(client apitxn.ChannelClient, module, fcn st
 	args = append(args, []byte(module))
 	args = append(args, data...)
 
-	qr := apitxn.QueryRequest{
+	return fabsdk.QueryFabric(client, s.Chaincode, fcn, args...)
+
+	/*qr := apitxn.QueryRequest{
 		ChaincodeID: s.Chaincode,
 		Fcn:         fcn,
 		Args:        args,
 	}
 
-	return client.Query(qr)
+	return client.Query(qr)*/
 }
 
-func (s *divinerService) queryFabricById(client apitxn.ChannelClient, module, fcn, id string) ([]byte, error) {
+func (s *divinerService) queryFabricByID(client apitxn.ChannelClient, module, fcn, id string) ([]byte, error) {
 	return s.queryFabric(client, module, fcn, []byte(id))
 }
 
@@ -55,23 +57,26 @@ func (s *divinerService) executeFabric(client apitxn.ChannelClient, module, fcn 
 	args = append(args, []byte(module))
 	args = append(args, data...)
 
-	txr := apitxn.ExecuteTxRequest{
+	return fabsdk.ExecuteFabric(client, s.Chaincode, fcn, args...)
+
+	/*txr := apitxn.ExecuteTxRequest{
 		ChaincodeID: s.Chaincode,
 		Fcn:         fcn,
 		Args:        args,
 	}
 
-	return client.ExecuteTx(txr)
+	return client.ExecuteTx(txr)*/
 }
 
 func (s *divinerService) registerChaincodeEvent(client apitxn.ChannelClient, chaincode, name string) (chan *apitxn.CCEvent, apitxn.Registration) {
-	id := name + "([a-zA-Z0-9]+)"
+	/*id := name + "([a-zA-Z0-9]+)"
 	notifier := make(chan *apitxn.CCEvent)
 	rce := client.RegisterChaincodeEvent(notifier, s.Chaincode, id)
-	return notifier, rce
+	return notifier, rce*/
+	return fabsdk.RegisterChaincodeEventWithDefaultRegex(client, s.Chaincode, name)
 }
 
-func (s *divinerService) selectEvent(notifier chan *apitxn.CCEvent, timeout time.Duration) []byte {
+/*func (s *divinerService) selectEvent(notifier chan *apitxn.CCEvent, timeout time.Duration) []byte {
 	select {
 	case evt := <-notifier:
 		log.Println("get notifier")
@@ -80,7 +85,7 @@ func (s *divinerService) selectEvent(notifier chan *apitxn.CCEvent, timeout time
 		log.Println("timeout")
 		return nil
 	}
-}
+}*/
 
 func (s *divinerService) returnMemberInfoResponse(bytes []byte) (*pbs.MemberInfoResponse, error) {
 	member, err := pbm.Unmarshal(bytes)
@@ -113,11 +118,11 @@ func (s *divinerService) QueryMember(ctx context.Context, req *pbs.QueryRequest)
 
 	defer client.Close()
 
-	if bytes, err := s.queryFabricById(client, "member", "query", req.Id); err != nil {
+	bytes, err := s.queryFabricByID(client, "member", "query", req.Id)
+	if err != nil {
 		return nil, err
-	} else {
-		return s.returnMemberInfoResponse(bytes)
 	}
+	return s.returnMemberInfoResponse(bytes)
 }
 
 func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreateRequest) (*pbs.MemberInfoResponse, error) {
@@ -147,21 +152,22 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "member")
 	defer client.UnregisterChaincodeEvent(rce)
 
-	_, err = s.executeFabric(client, "member", "create", bytes)
+	tx, err := s.executeFabric(client, "member", "create", bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	if bytes := s.selectEvent(notifier, 5); bytes != nil {
+	bytes = fabsdk.SelectEvent(notifier, tx.ID, 5)
+	if bytes != nil {
 		return s.returnMemberInfoResponse(bytes)
-	} else {
-		if bytes, err := s.queryFabricById(client, "member", "query", member.Id); err != nil {
-			return nil, err
-		} else {
-			return s.returnMemberInfoResponse(bytes)
-		}
 	}
 
+	bytes, err = s.queryFabricByID(client, "member", "query", member.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.returnMemberInfoResponse(bytes)
 }
 
 func (s *divinerService) returnEventInfoResponse(bytes []byte) (*pbs.EventInfoResponse, error) {
@@ -190,11 +196,11 @@ func (s *divinerService) QueryEvent(ctx context.Context, req *pbs.QueryRequest) 
 
 	defer client.Close()
 
-	if bytes, err := s.queryFabricById(client, "event", "query", req.Id); err != nil {
+	bytes, err := s.queryFabricByID(client, "event", "query", req.Id)
+	if err != nil {
 		return nil, err
-	} else {
-		return s.returnEventInfoResponse(bytes)
 	}
+	return s.returnEventInfoResponse(bytes)
 }
 
 func (s *divinerService) CreateEvent(ctx context.Context, req *pbs.EventCreateRequest) (*pbs.EventInfoResponse, error) {
@@ -223,21 +229,23 @@ func (s *divinerService) CreateEvent(ctx context.Context, req *pbs.EventCreateRe
 	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "event")
 	defer client.UnregisterChaincodeEvent(rce)
 
-	_, err = s.executeFabric(client, "event", "create", data)
+	tx, err := s.executeFabric(client, "event", "create", data)
 	if err != nil {
 		fmt.Printf("execute fabric error: %v\n", err)
 		return nil, err
 	}
 
-	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
+	bytes := fabsdk.SelectEvent(notifier, tx.ID, s.Wait)
+	if bytes != nil {
 		return s.returnEventInfoResponse(bytes)
-	} else {
-		if bytes, err := s.queryFabricById(client, "event", "query", event.Id); err != nil {
-			return nil, err
-		} else {
-			return s.returnEventInfoResponse(bytes)
-		}
 	}
+
+	bytes, err = s.queryFabricByID(client, "event", "query", event.Id)
+	if err != nil {
+		return nil, err
+	}
+	return s.returnEventInfoResponse(bytes)
+
 }
 
 func (s *divinerService) returnMarketInfoResponse(bytes []byte) (*pbs.MarketInfoResponse, error) {
@@ -266,11 +274,11 @@ func (s *divinerService) QueryMarket(ctx context.Context, req *pbs.QueryRequest)
 
 	defer client.Close()
 
-	if bytes, err := s.queryFabricById(client, "market", "query", req.Id); err != nil {
+	bytes, err := s.queryFabricByID(client, "market", "query", req.Id)
+	if err != nil {
 		return nil, err
-	} else {
-		return s.returnMarketInfoResponse(bytes)
 	}
+	return s.returnMarketInfoResponse(bytes)
 }
 
 func (s *divinerService) CreateMarket(ctx context.Context, req *pbs.MarketCreateRequest) (*pbs.MarketInfoResponse, error) {
@@ -299,28 +307,29 @@ func (s *divinerService) CreateMarket(ctx context.Context, req *pbs.MarketCreate
 	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "market")
 	defer client.UnregisterChaincodeEvent(rce)
 
-	_, err = s.executeFabric(client, "market", "create", []byte(req.User), []byte(req.Event), num, flag)
+	tx, err := s.executeFabric(client, "market", "create", []byte(req.User), []byte(req.Event), num, flag)
 	if err != nil {
 		fmt.Printf("execute fabric error: %v\n", err)
 		return nil, err
 	}
 
-	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
+	bytes := fabsdk.SelectEvent(notifier, tx.ID, s.Wait)
+	if bytes != nil {
 		return s.returnMarketInfoResponse(bytes)
-	} else {
-		return nil, fmt.Errorf("can not get event notify")
 	}
+	return nil, fmt.Errorf("can not get event notify")
 }
 
 func (s *divinerService) returnTxResponse(data []byte) (*pbs.TxResponse, error) {
-	if price, err := cast.BytesToFloat64(data); err != nil {
+	price, err := cast.BytesToFloat64(data)
+	if err != nil {
 		return nil, err
-	} else {
-		return &pbs.TxResponse{
-			Price: price,
-			Time:  ptypes.TimestampNow(),
-		}, nil
 	}
+	return &pbs.TxResponse{
+		Price: price,
+		Time:  ptypes.TimestampNow(),
+	}, nil
+
 }
 
 func (s *divinerService) Tx(ctx context.Context, req *pbs.TxRequest) (*pbs.TxResponse, error) {
@@ -350,15 +359,16 @@ func (s *divinerService) Tx(ctx context.Context, req *pbs.TxRequest) (*pbs.TxRes
 
 	notifier, rce := s.registerChaincodeEvent(client, s.Chaincode, "tx")
 	defer client.UnregisterChaincodeEvent(rce)
-	_, err = s.executeFabric(client, "tx", cmd, []byte(req.User), []byte(req.Share), volume)
+	tx, err := s.executeFabric(client, "tx", cmd, []byte(req.User), []byte(req.Share), volume)
 	if err != nil {
 		return nil, err
 	}
-	if bytes := s.selectEvent(notifier, s.Wait); bytes != nil {
+
+	bytes := fabsdk.SelectEvent(notifier, tx.ID, s.Wait)
+	if bytes != nil {
 		return s.returnTxResponse(bytes)
-	} else {
-		return nil, fmt.Errorf("can not get event notify")
 	}
+	return nil, fmt.Errorf("can not get event notify")
 }
 
 func main() {

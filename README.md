@@ -14,7 +14,7 @@ The project is a prototype implements **Prediction Market** with **LMSR** on IBM
 1. clone this project: `git clone git@github.com:kigichang/diviner.git`
 2. go to folder **diviner/fixtures**
 3. start fabric environment: `./start.sh`
-4. watch **cli** (run `docker logs cli`) logs until chaincode is instantiated (you will see `[main] main -> INFO 009 Exiting.....`)
+4. watch **cli** logs (run `docker logs cli`) to make sure chaincode is instantiated (you will see `[main] main -> INFO 009 Exiting.....`)
 5. open a new terminal, go to **diviner/service**, and start middle service: `go run diviner_service.go`
 6. open a new terminal, go to **diviner/app**, and play. :)
 

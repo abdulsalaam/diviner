@@ -1,8 +1,12 @@
 package fabsdk
 
 import (
+	"diviner/common/cast"
+	"time"
+
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
 	fab "github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/errors"
@@ -106,4 +110,65 @@ func GetEventHub(client fab.FabricClient, org string) (fab.EventHub, error) {
 	}
 
 	return eventHub, nil
+}
+
+// QueryFabric ...
+func QueryFabric(client apitxn.ChannelClient, chaincode, fcn string, data ...[]byte) ([]byte, error) {
+	qr := apitxn.QueryRequest{
+		ChaincodeID: chaincode,
+		Fcn:         fcn,
+		Args:        data,
+	}
+
+	return client.Query(qr)
+}
+
+// QueryFabricByID ...
+func QueryFabricByID(client apitxn.ChannelClient, chaincode, fcn, id string) ([]byte, error) {
+	return QueryFabric(client, chaincode, fcn, []byte(id))
+}
+
+// ExecuteFabric ...
+func ExecuteFabric(client apitxn.ChannelClient, chaincode, fcn string, data ...[]byte) (apitxn.TransactionID, error) {
+	txr := apitxn.ExecuteTxRequest{
+		ChaincodeID: chaincode,
+		Fcn:         fcn,
+		Args:        data,
+	}
+
+	return client.ExecuteTx(txr)
+}
+
+// ExecuteFabricWithStrings ...
+func ExecuteFabricWithStrings(client apitxn.ChannelClient, chaincode, fcn string, data ...string) (apitxn.TransactionID, error) {
+	tmp := cast.StringsToByteArray(data...)
+	return ExecuteFabric(client, chaincode, fcn, tmp...)
+}
+
+// RegisterChaincodeEvent ...
+func RegisterChaincodeEvent(client apitxn.ChannelClient, chaincode, name, regex string) (chan *apitxn.CCEvent, apitxn.Registration) {
+	id := name + regex
+
+	notifier := make(chan *apitxn.CCEvent)
+	rce := client.RegisterChaincodeEvent(notifier, chaincode, id)
+	return notifier, rce
+}
+
+// RegisterChaincodeEventWithDefaultRegex ...
+func RegisterChaincodeEventWithDefaultRegex(client apitxn.ChannelClient, chaincode, name string) (chan *apitxn.CCEvent, apitxn.Registration) {
+	return RegisterChaincodeEvent(client, chaincode, name, "([a-zA-Z0-9]+)")
+}
+
+// SelectEvent ...
+func SelectEvent(notifier chan *apitxn.CCEvent, txid string, timeout time.Duration) []byte {
+	for {
+		select {
+		case evt := <-notifier:
+			if evt.TxID == txid {
+				return evt.Payload
+			}
+		case <-time.After(time.Second * timeout):
+			return nil
+		}
+	}
 }
