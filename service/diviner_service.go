@@ -73,23 +73,8 @@ func (s *divinerService) executeFabric(client apitxn.ChannelClient, module, fcn 
 }
 
 func (s *divinerService) registerChaincodeEvent(client apitxn.ChannelClient, chaincode, name string) (chan *apitxn.CCEvent, apitxn.Registration) {
-	/*id := name + "([a-zA-Z0-9]+)"
-	notifier := make(chan *apitxn.CCEvent)
-	rce := client.RegisterChaincodeEvent(notifier, s.Chaincode, id)
-	return notifier, rce*/
 	return fabsdk.RegisterChaincodeEventWithDefaultRegex(client, s.Chaincode, name)
 }
-
-/*func (s *divinerService) selectEvent(notifier chan *apitxn.CCEvent, timeout time.Duration) []byte {
-	select {
-	case evt := <-notifier:
-		log.Println("get notifier")
-		return evt.Payload
-	case <-time.After(time.Second * timeout):
-		log.Println("timeout")
-		return nil
-	}
-}*/
 
 func (s *divinerService) returnMemberInfoResponse(bytes []byte) (*pbs.MemberInfoResponse, error) {
 	member, err := pbm.Unmarshal(bytes)
@@ -146,50 +131,7 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 		return nil, err
 	}
 
-	request := apitxn.ChaincodeInvokeRequest{
-		Targets:      []apitxn.ProposalProcessor{s.Channel.PrimaryPeer()},
-		Fcn:          "create",
-		Args:         [][]byte{[]byte("member"), bytes},
-		TransientMap: nil,
-		ChaincodeID:  s.Chaincode,
-	}
-
-	transactionProposalResponses, _, err := s.Channel.SendTransactionProposal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range transactionProposalResponses {
-		if v.Err != nil {
-			return nil, fmt.Errorf("endorser %s error: %v", v.Endorser, v.Err)
-		}
-	}
-
-	tx, err := s.Channel.CreateTransaction(transactionProposalResponses)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := s.Channel.SendTransaction(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	if response.Err != nil {
-		return nil, fmt.Errorf("orderer %s error: %v", response.Orderer, response.Err)
-	}
-
 	client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
-	if err != nil {
-		return nil, err
-	}
-	bytes, err = s.queryFabricByID(client, "member", "query", member.Id)
-	if err != nil {
-		return nil, err
-	}
-	return s.returnMemberInfoResponse(bytes)
-
-	/*client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +157,6 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 	}
 
 	return s.returnMemberInfoResponse(bytes)
-	*/
 }
 
 func (s *divinerService) returnEventInfoResponse(bytes []byte) (*pbs.EventInfoResponse, error) {
