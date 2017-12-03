@@ -27,6 +27,7 @@ type divinerService struct {
 	Client       apifabclient.FabricClient
 	FabricConfig string
 	SDK          *fabapi.FabricSDK
+	Organization string
 	ChannelID    string
 	Channel      apifabclient.Channel
 	Chaincode    string
@@ -400,6 +401,7 @@ func main() {
 
 	service := &divinerService{
 		FabricConfig: conf.GetString("fabric"),
+		Organization: conf.GetString("organization"),
 		ChannelID:    conf.GetString("channel"),
 		Chaincode:    conf.GetString("chaincode"),
 		User:         conf.GetString("user"),
@@ -413,7 +415,7 @@ func main() {
 		log.Fatalf("init fab sdk error: %v", err)
 	}
 
-	session, err := service.SDK.NewPreEnrolledUserSession("Diviner", "User1")
+	session, err := service.SDK.NewPreEnrolledUserSession(service.Organization, service.User)
 	if err != nil {
 		log.Fatalf("session error: %v\n", err)
 	}
@@ -422,7 +424,7 @@ func main() {
 		log.Fatalf("fabric client error: %v\n", err)
 	}
 
-	service.Channel, err = fabsdk.GetChannel(service.Client, service.ChannelID, []string{"Diviner"})
+	service.Channel, err = fabsdk.GetChannel(service.Client, service.ChannelID, []string{service.Organization})
 	if err != nil {
 		log.Fatalf("get channel error: %v\n", err)
 	}
@@ -430,7 +432,6 @@ func main() {
 	pbs.RegisterDivinerSerivceServer(s, service)
 
 	reflection.Register(s)
-	go service.monitor()
 
 	log.Println("serving...")
 	if err := s.Serve(lis); err != nil {

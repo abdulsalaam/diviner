@@ -2,6 +2,7 @@
   "protocol": "tcp",
   "listen":  ":50051",
   "channel": "divinerchannel",
+  "organization": "Diviner",
   "user": "User1",
   "fabric": "fabric_config.yaml",
   "expired": 300,
