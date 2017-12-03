@@ -1,0 +1,11 @@
+{
+  "protocol": "tcp",
+  "listen":  ":50051",
+  "channel": "divinerchannel",
+  "user": "User1",
+  "fabric": "fabric_config.yaml",
+  "expired": 300,
+  "wait": 5,
+  "balance": 100000.0,
+  "chaincode": "lmsr"
+}

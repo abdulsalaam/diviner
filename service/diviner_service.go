@@ -14,6 +14,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/api/apifabclient"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn"
 	"github.com/hyperledger/fabric-sdk-go/def/fabapi"
@@ -22,9 +24,11 @@ import (
 )
 
 type divinerService struct {
+	Client       apifabclient.FabricClient
 	FabricConfig string
 	SDK          *fabapi.FabricSDK
 	ChannelID    string
+	Channel      apifabclient.Channel
 	Chaincode    string
 	User         string
 	Expired      int64
@@ -115,7 +119,6 @@ func (s *divinerService) QueryMember(ctx context.Context, req *pbs.QueryRequest)
 	if err != nil {
 		return nil, err
 	}
-
 	defer client.Close()
 
 	bytes, err := s.queryFabricByID(client, "member", "query", req.Id)
@@ -143,7 +146,50 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 		return nil, err
 	}
 
+	request := apitxn.ChaincodeInvokeRequest{
+		Targets:      []apitxn.ProposalProcessor{s.Channel.PrimaryPeer()},
+		Fcn:          "create",
+		Args:         [][]byte{[]byte("member"), bytes},
+		TransientMap: nil,
+		ChaincodeID:  s.Chaincode,
+	}
+
+	transactionProposalResponses, _, err := s.Channel.SendTransactionProposal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range transactionProposalResponses {
+		if v.Err != nil {
+			return nil, fmt.Errorf("endorser %s error: %v", v.Endorser, v.Err)
+		}
+	}
+
+	tx, err := s.Channel.CreateTransaction(transactionProposalResponses)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := s.Channel.SendTransaction(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Err != nil {
+		return nil, fmt.Errorf("orderer %s error: %v", response.Orderer, response.Err)
+	}
+
 	client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err = s.queryFabricByID(client, "member", "query", member.Id)
+	if err != nil {
+		return nil, err
+	}
+	return s.returnMemberInfoResponse(bytes)
+
+	/*client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +215,7 @@ func (s *divinerService) CreateMember(ctx context.Context, req *pbs.MemberCreate
 	}
 
 	return s.returnMemberInfoResponse(bytes)
+	*/
 }
 
 func (s *divinerService) returnEventInfoResponse(bytes []byte) (*pbs.EventInfoResponse, error) {
@@ -372,7 +419,31 @@ func (s *divinerService) Tx(ctx context.Context, req *pbs.TxRequest) (*pbs.TxRes
 	return nil, fmt.Errorf("can not get event notify")
 }
 
+func (s *divinerService) monitor() {
+	log.Println("monitor starting...")
+	client, err := s.SDK.NewChannelClient(s.ChannelID, s.User)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	notifier := make(chan *apitxn.CCEvent)
+	rce := client.RegisterChaincodeEvent(notifier, s.Chaincode, "member([a-zA-z0-9]+)")
+	defer client.UnregisterChaincodeEvent(rce)
+
+	for {
+		select {
+		case ccEvent := <-notifier:
+			log.Printf("chaincode: %s, name: %s, txid: %s\n", ccEvent.ChaincodeID, ccEvent.EventName, ccEvent.TxID)
+		case <-time.After(time.Second * 5):
+			log.Println("wait...")
+		}
+	}
+
+}
+
 func main() {
+	// TODO: add trace chaincode and block event with gorouting.
 	conf, err := config.Load()
 	if err != nil {
 		log.Fatalln(err)
@@ -401,11 +472,24 @@ func main() {
 		log.Fatalf("init fab sdk error: %v", err)
 	}
 
-	log.Println(service)
+	session, err := service.SDK.NewPreEnrolledUserSession("Diviner", "User1")
+	if err != nil {
+		log.Fatalf("session error: %v\n", err)
+	}
+	service.Client, err = service.SDK.NewSystemClient(session)
+	if err != nil {
+		log.Fatalf("fabric client error: %v\n", err)
+	}
+
+	service.Channel, err = fabsdk.GetChannel(service.Client, service.ChannelID, []string{"Diviner"})
+	if err != nil {
+		log.Fatalf("get channel error: %v\n", err)
+	}
 
 	pbs.RegisterDivinerSerivceServer(s, service)
 
 	reflection.Register(s)
+	go service.monitor()
 
 	log.Println("serving...")
 	if err := s.Serve(lis); err != nil {

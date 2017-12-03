@@ -2,6 +2,7 @@ package fabsdk
 
 import (
 	"diviner/common/cast"
+	"log"
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/api/apiconfig"
@@ -164,10 +165,12 @@ func SelectEvent(notifier chan *apitxn.CCEvent, txid string, timeout time.Durati
 	for {
 		select {
 		case evt := <-notifier:
+			log.Println("get notifier")
 			if evt.TxID == txid {
 				return evt.Payload
 			}
 		case <-time.After(time.Second * timeout):
+			log.Println("timeout")
 			return nil
 		}
 	}
