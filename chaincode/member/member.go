@@ -44,11 +44,10 @@ func (cc *memberCC) register(stub shim.ChaincodeStubInterface, member *pbm.Membe
 	if err != nil {
 		return ccc.Errorf("get member address (%s) error: %v", member.Address, err)
 	} else if existed {
-		return ccc.Errorf("member address (%s) is existed", member.Address)
+		return ccc.NotFound(member.Address)
 	}
-	member.Balance = cc.balance
-	member.Blocked = false
-	member.Assets = nil
+
+	member = pbm.NewMember(member.Address, cc.balance)
 
 	return ccc.PutMessageAndReturn(stub, member.Address, member)
 }
@@ -58,22 +57,22 @@ func (cc *memberCC) transfer(stub shim.ChaincodeStubInterface, tx *pbm.Transfer,
 	if err != nil {
 		return ccc.Errorf("find target (%s) error: %v", tx.Target, err)
 	} else if !existed {
-		return ccc.Errorf("target (%s) not found", tx.Target)
+		return ccc.NotFound(tx.Target)
 	}
 
 	if target.Blocked {
-		return ccc.Errorf("target (%s) is blocked", tx.Target)
+		return ccc.NotAcceptable(tx.Target)
 	}
 
 	source, existed, err := ccu.GetMemberAndCheck(stub, from)
 	if err != nil {
 		return ccc.Errorf("find source (%s) error: %v", from, err)
 	} else if !existed {
-		return ccc.Errorf("source (%s) not found", from)
+		return ccc.NotFound(from)
 	}
 
 	if source.Blocked {
-		return ccc.Errorf("source (%s) is blocked", source.Address)
+		return ccc.NotAcceptable(from)
 	}
 
 	amount := cc.amount(tx.Amount)
@@ -97,7 +96,7 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	len := len(args)
 
 	if len != 3 {
-		return ccc.Errorf("args len error: %d", len)
+		return ccc.BadRequest("args len error: %d", len)
 	}
 
 	cmd := string(args[0])
@@ -108,18 +107,25 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	switch cmd {
 	case "query":
 		id := string(args[1])
+		v, _ := pbc.Unmarshal(args[2])
+		me := base58.Encode(v.PublicKey)
+
+		if id != me {
+			return ccc.Forbidden(me, id)
+		}
+
 		bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 		if err != nil {
 			return ccc.Errore(err)
 		} else if !existed {
-			return ccc.Errorf("member (%s) not found", id)
+			return ccc.NotFound(id)
 		}
 		return shim.Success(bytes)
 
 	case "register":
 		mem, err := pbm.Unmarshal(args[1])
 		if err != nil {
-			ccc.Errorf("member data error: %v", err)
+			ccc.Errore(err)
 		}
 		return cc.register(stub, mem)
 
@@ -134,7 +140,7 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return cc.transfer(stub, tx, from)
 	}
 
-	return ccc.Errorf("unknown command: %s", cmd)
+	return ccc.NotImplemented(cmd)
 }
 
 func main() {

@@ -8,18 +8,7 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	perrors "github.com/pkg/errors"
 )
-
-// Errorf ...
-func Errorf(format string, a ...interface{}) pb.Response {
-	return shim.Error(fmt.Sprintf(format, a...))
-}
-
-// Errore ...
-func Errore(err error) pb.Response {
-	return shim.Error(err.Error())
-}
 
 // GetStateAndCheck ...
 func GetStateAndCheck(stub shim.ChaincodeStubInterface, key string) ([]byte, bool, error) {
@@ -86,7 +75,7 @@ func PutStateByCompositeKey(stub shim.ChaincodeStubInterface, value []byte, name
 func PutStateAndReturn(stub shim.ChaincodeStubInterface, key string, value, payload []byte) pb.Response {
 	err := stub.PutState(key, value)
 	if err != nil {
-		return Errorf("put key (%s) error: %v", key, value)
+		return Errorf("put key (%s) error: %v", key, err)
 	}
 
 	return shim.Success(payload)
@@ -96,7 +85,7 @@ func PutStateAndReturn(stub shim.ChaincodeStubInterface, key string, value, payl
 func PutMessageAndReturn(stub shim.ChaincodeStubInterface, key string, msg proto.Message) pb.Response {
 	bytes, err := PutMessage(stub, key, msg)
 	if err != nil {
-		return Errore(err)
+		return Errorf("put key (%s) error: %v", key, err)
 	}
 	return shim.Success(bytes)
 }
@@ -125,9 +114,9 @@ func NotOK(resp *pb.Response) bool {
 func Find(stub shim.ChaincodeStubInterface, id string) ([]byte, error) {
 	bytes, existed, err := GetStateAndCheck(stub, id)
 	if err != nil {
-		return nil, perrors.Errorf("find id (%s) error: %v", id, err)
+		return nil, fmt.Errorf("find id (%s) error: %v", id, err)
 	} else if !existed {
-		return nil, perrors.Errorf("id (%s) is not existed", id)
+		return nil, fmt.Errorf("id (%s) is not existed", id)
 	}
 
 	return bytes, nil

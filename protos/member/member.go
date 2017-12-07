@@ -4,14 +4,14 @@ import (
 	"diviner/common/base58"
 	fmt "fmt"
 
+	"github.com/golang/protobuf/ptypes"
+
 	proto "github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/bccsp"
 )
 
 // NewMember ...
-func NewMember(pub []byte, balance float64) *Member {
-	addr := base58.Encode(pub)
-
+func NewMember(addr string, balance float64) *Member {
 	return &Member{
 		Address: addr,
 		Balance: balance,
@@ -21,8 +21,8 @@ func NewMember(pub []byte, balance float64) *Member {
 	}
 }
 
-// NewMember ...
-func NewMember(priv bccsp.Key, balance float64) (*Member, error) {
+// NewMemberWithPrivateKey ...
+func NewMemberWithPrivateKey(priv bccsp.Key, balance float64) (*Member, error) {
 	if !priv.Private() {
 		return nil, fmt.Errorf("priv must be a private key")
 	}
@@ -32,6 +32,24 @@ func NewMember(priv bccsp.Key, balance float64) (*Member, error) {
 		return nil, err
 	}
 
+	addr, err := base58.Address(pub)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMember(addr, balance), nil
+}
+
+func NewTransfer(target string, amount float64) (*Transfer, error) {
+	if amount <= 0 {
+		return nil, fmt.Errorf("amount must be larger than 0, but %v", amount)
+	}
+
+	return &Transfer{
+		Target: target,
+		Amount: amount,
+		Time:   ptypes.TimestampNow(),
+	}, nil
 }
 
 // Unmarshal ...
