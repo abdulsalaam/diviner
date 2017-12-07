@@ -1,6 +1,10 @@
-package lmsr
+package market
 
-import "testing"
+import (
+	"diviner/common/lmsr"
+	"testing"
+	"time"
+)
 
 var (
 	user     = "user1"
@@ -14,10 +18,10 @@ func checkMarket(m *Market, u string, e *Event, num float64, flag bool, t *testi
 
 	if flag {
 		fund = num
-		liq = Liquidity(fund, len(e.Outcomes))
+		liq = lmsr.Liquidity(fund, len(e.Outcomes))
 	} else {
 		liq = num
-		fund = Fund(liq, len(e.Outcomes))
+		fund = lmsr.Fund(liq, len(e.Outcomes))
 	}
 
 	if m.GetUser() != u {
@@ -61,55 +65,75 @@ func checkMarket(m *Market, u string, e *Event, num float64, flag bool, t *testi
 }
 
 func TestNewMarket(t *testing.T) {
-	evt, _ := NewEvent(user, title, outcomes[0], outcomes[1])
 
-	mkt1, err := NewMarketWithFund(user, evt, 100.0)
+	nextYear := time.Now().AddDate(1, 0, 0)
+	start := nextYear.AddDate(0, -2, 0)
+	end := nextYear.AddDate(0, 0, -1)
+
+	evt, _ := NewEvent(user, title, nextYear, outcomes[0], outcomes[1])
+
+	mkt1, err := NewMarketWithFund(user, evt, start, end, 100.0)
 	if err != nil {
 		t.Fatal("create market with fund failed")
 	}
 
 	checkMarket(mkt1, user, evt, 100.0, true, t)
 
-	mkt2, err := NewMarketWithLiquidity(user, evt, 100.0)
+	mkt2, err := NewMarketWithLiquidity(user, evt, start, end, 100.0)
 	if err != nil {
 		t.Fatal("create market with liquidity failed")
 	}
 
 	checkMarket(mkt2, user, evt, 100.0, false, t)
 
-	if CmpMarket(mkt1, mkt2) {
-		t.Fatal("two market must not equal")
+	if mkt1.String() == mkt2.String() {
+		t.Fatal("two makets must not equal")
 	}
 }
 
 func TestWrongData(t *testing.T) {
-	evt, _ := NewEvent(user, title, outcomes[0], outcomes[1])
-	_, err := NewMarketWithFund(user, evt, 0)
+	nextYear := time.Now().AddDate(1, 0, 0)
+	start := nextYear.AddDate(0, -2, 0)
+	end := nextYear.AddDate(0, 0, -1)
+
+	evt, _ := NewEvent(user, title, nextYear, outcomes[0], outcomes[1])
+	_, err := NewMarketWithFund(user, evt, start, end, 0)
 	if err == nil {
 		t.Fatal("fund = 0 must return error")
 	}
 
-	_, err = NewMarketWithLiquidity(user, evt, 0)
+	_, err = NewMarketWithLiquidity(user, evt, start, end, 0)
 	if err == nil {
 		t.Fatal("liquidity = 0 must return error")
 	}
 
 	evt.Approved = true
-	_, err = NewMarketWithFund(user, evt, 100.0)
+	_, err = NewMarketWithFund(user, evt, start, end, 100.0)
 	if err == nil {
 		t.Fatal("can not create market with approved event")
 	}
 
-	_, err = NewMarketWithLiquidity(user, evt, 100.0)
+	evt.Approved = false
+	evt.Allowed = false
+	_, err = NewMarketWithFund(user, evt, start, end, 100.0)
+	if err == nil {
+		t.Fatal("can not create market with rejected event")
+	}
+
+	_, err = NewMarketWithLiquidity(user, evt, start, end, 100.0)
 	if err == nil {
 		t.Fatal("can not create market with approved event")
 	}
 }
 
 func TestMarshal(t *testing.T) {
-	evt, _ := NewEvent(user, title, outcomes[0], outcomes[1])
+	nextYear := time.Now().AddDate(1, 0, 0)
+	start := nextYear.AddDate(0, -2, 0)
+	end := nextYear.AddDate(0, 0, -1)
 
-	m1, _ := NewMarketWithFund(user, evt, 100.0)
+	evt, _ := NewEvent(user, title, nextYear, outcomes[0], outcomes[1])
+
+	m1, _ := NewMarketWithFund(user, evt, start, end, 100.0)
 
 	byte1, err := MarshalMarket(m1)
 	if err != nil {
@@ -121,7 +145,7 @@ func TestMarshal(t *testing.T) {
 		t.Fatal("unmarshal market failed")
 	}
 
-	if !CmpMarket(m1, m2) {
+	if m1.String() != m2.String() {
 		t.Fatal("data not match")
 	}
 }

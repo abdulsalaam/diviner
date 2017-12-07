@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-package lmsr;
+package market;
+
+import "google/protobuf/timestamp.proto";
 
 /* Event */
 message Outcome {
@@ -15,6 +17,12 @@ message Event {
   repeated Outcome outcomes = 4;
   string result = 5;
   bool approved = 6;
+  google.protobuf.Timestamp end = 7;
+  bool allowed = 8;
+}
+
+message Events {
+  repeated Event list = 1;
 }
 
 /* Market */
@@ -28,6 +36,9 @@ message Market {
   map<string, double> shares = 7;
   map<string, double> prices = 8;
   bool settled = 9;
+  google.protobuf.Timestamp start = 10;
+  google.protobuf.Timestamp end = 11;
+  bool allowed = 12;
 }
 
 message Markets {

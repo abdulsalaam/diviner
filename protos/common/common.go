@@ -3,16 +3,49 @@ package common
 import (
 	"diviner/common/csp"
 	"diviner/common/util"
+	"errors"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
+
+	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hyperledger/fabric/bccsp"
-	perrors "github.com/pkg/errors"
 )
+
+func concate(in ...[]byte) []byte {
+	sum := 0
+
+	for _, x := range in {
+		sum += len(x)
+	}
+
+	tmp := make([]byte, sum)
+
+	idx := 0
+
+	for _, x := range in {
+		copy(tmp[idx:], x)
+		idx += len(x)
+	}
+
+	return tmp
+}
+
+func hash(in []byte, ts *timestamp.Timestamp) ([]byte, error) {
+	bytes, err := proto.Marshal(ts)
+	if err != nil {
+		return nil, err
+	}
+
+	tmp := concate(in, bytes)
+
+	return csp.Hash(tmp)
+}
 
 // NewVerification ...
 func NewVerification(priv bccsp.Key, in []byte) (*Verification, error) {
 	if !priv.Private() {
-		return nil, perrors.New("priv must be a private key")
+		return nil, errors.New("priv must be a private key")
 	}
 
 	pubKey, err := csp.GetPublicKeyBytes(priv)
@@ -20,7 +53,9 @@ func NewVerification(priv bccsp.Key, in []byte) (*Verification, error) {
 		return nil, err
 	}
 
-	hash, err := csp.Hash(in)
+	curr := ptypes.TimestampNow()
+	hash, err := hash(in, curr)
+
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +69,7 @@ func NewVerification(priv bccsp.Key, in []byte) (*Verification, error) {
 		PublicKey: pubKey,
 		Hash:      hash,
 		Signature: sign,
-		Time:      ptypes.TimestampNow(),
+		Time:      curr,
 	}, nil
 
 }
@@ -43,16 +78,17 @@ func NewVerification(priv bccsp.Key, in []byte) (*Verification, error) {
 func Verify(v *Verification, in []byte, expired int64) (bool, error) {
 	curr := ptypes.TimestampNow()
 	if curr.Seconds-v.Time.Seconds >= expired {
-		return false, perrors.New("data is expired")
+		return false, errors.New("data is expired")
 	}
 
-	hash, err := csp.Hash(in)
+	hash, err := hash(in, v.Time)
+
 	if err != nil {
 		return false, err
 	}
 
 	if util.CmpByteArray(hash, v.Hash) != 0 {
-		return false, perrors.New("hash content not equal")
+		return false, errors.New("hash content not equal")
 	}
 
 	key, err := csp.ImportPubFromRaw(v.PublicKey)
@@ -61,4 +97,18 @@ func Verify(v *Verification, in []byte, expired int64) (bool, error) {
 	}
 
 	return csp.Verify(key, v.Signature, hash)
+}
+
+// Unmarshal ...
+func Unmarshal(data []byte) (*Verification, error) {
+	v := &Verification{}
+	if err := proto.Unmarshal(data, v); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+// Marshal ...
+func Marshal(v *Verification) ([]byte, error) {
+	return proto.Marshal(v)
 }

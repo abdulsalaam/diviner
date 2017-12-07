@@ -1,10 +1,18 @@
 syntax = "proto3";
 
 package member;
+import "google/protobuf/timestamp.proto";
 
 message Member {
-  string id = 1;
-  string address = 2;
-  double balance = 3;
-  map<string, double> assets = 4;
+  string address = 1;
+  double balance = 2;
+  map<string, double> assets = 3;
+  double subsidy = 4;
+  bool blocked = 5;
+}
+
+message Transfer {
+  string target = 1;
+  double amount = 2;
+  google.protobuf.Timestamp time = 3;
 }

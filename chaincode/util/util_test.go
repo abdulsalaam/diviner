@@ -7,7 +7,7 @@ import (
 
 	ccc "diviner/chaincode/common"
 	"diviner/common/csp"
-	pbl "diviner/protos/lmsr"
+	pbl "diviner/protos/market"
 	pbm "diviner/protos/member"
 
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -143,7 +143,7 @@ func TestPutAndFindMarket(t *testing.T) {
 
 	bytes, err := PutMarket(stub, m1)
 	if err != nil {
-		t.Fatal("put market failed: %v", err)
+		t.Fatalf("put market failed: %v\n", err)
 	}
 
 	m2, _ := pbl.UnmarshalMarket(bytes)

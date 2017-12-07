@@ -1,8 +1,7 @@
-package lmsr
+package market
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
@@ -102,6 +101,7 @@ func SepOutcomeID(id string) (string, int, bool) {
 	return s1, int(idx), true
 }
 
+/*
 // Fund ...
 func Fund(liquidity float64, n int) float64 {
 	return liquidity * math.Log(float64(n))
@@ -147,3 +147,5 @@ func Return(liquidity, answer float64, shares []float64) float64 {
 func Revenue(liquidity, fund, answer float64, shares []float64) float64 {
 	return Return(liquidity, answer, shares) - fund
 }
+
+*/

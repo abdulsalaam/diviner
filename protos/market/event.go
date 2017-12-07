@@ -1,14 +1,26 @@
-package lmsr
+package market
 
 import (
-	proto "github.com/golang/protobuf/proto"
-	perrors "github.com/pkg/errors"
+	"fmt"
+	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 )
 
 // NewEvent ...
-func NewEvent(user, title string, outcomes ...string) (*Event, error) {
+func NewEvent(user, title string, end time.Time, outcomes ...string) (*Event, error) {
 	if len(outcomes) <= 1 {
-		return nil, perrors.New("length of outcomes must larger than 1")
+		return nil, fmt.Errorf("length of outcomes must larger than 1")
+	}
+
+	if end.Before(time.Now()) {
+		return nil, fmt.Errorf("end time must be latter than now: %v", end)
+	}
+
+	ts, err := ptypes.TimestampProto(end)
+	if err != nil {
+		return nil, err
 	}
 
 	event := &Event{
@@ -16,6 +28,8 @@ func NewEvent(user, title string, outcomes ...string) (*Event, error) {
 		User:     user,
 		Title:    title,
 		Approved: false,
+		Allowed:  true,
+		End:      ts,
 	}
 
 	tmp := make([]*Outcome, len(outcomes))
@@ -34,6 +48,7 @@ func NewEvent(user, title string, outcomes ...string) (*Event, error) {
 	return event, nil
 }
 
+// FindOutcome ...
 func FindOutcome(event *Event, outcome string) int {
 	for i, x := range event.Outcomes {
 		if x.Id == outcome {
@@ -42,25 +57,6 @@ func FindOutcome(event *Event, outcome string) int {
 	}
 
 	return -1
-}
-
-// CmpEvent ...
-func CmpEvent(e1, e2 *Event) bool {
-	if e1.Id != e2.Id || e1.User != e2.User || e1.Title != e2.Title || e1.Approved != e2.Approved {
-		return false
-	}
-
-	if len(e1.Outcomes) != len(e2.Outcomes) {
-		return false
-	}
-
-	for i := range e1.Outcomes {
-		if *(e1.Outcomes[i]) != *(e2.Outcomes[i]) {
-			return false
-		}
-	}
-
-	return true
 }
 
 // UnmarshalEvent ...

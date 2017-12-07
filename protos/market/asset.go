@@ -1,4 +1,4 @@
-package lmsr
+package market
 
 import (
 	proto "github.com/golang/protobuf/proto"

@@ -2,7 +2,8 @@ package util
 
 import (
 	ccc "diviner/chaincode/common"
-	pbl "diviner/protos/lmsr"
+	pbc "diviner/protos/common"
+	pbl "diviner/protos/market"
 	pbm "diviner/protos/member"
 	"fmt"
 
@@ -147,4 +148,20 @@ func FindAllAssets(stub shim.ChaincodeStubInterface, keys ...string) (*pbl.Asset
 	return &pbl.Assets{
 		List: assets,
 	}, nil
+}
+
+// CheckAndPutVerfication ...
+func CheckAndPutVerfication(stub shim.ChaincodeStubInterface, in, check []byte, expired int64) error {
+	v, err := pbc.Unmarshal(check)
+	if err != nil {
+		return err
+	}
+
+	if ok, err := pbc.Verify(v, in, expired); err != nil {
+		return err
+	} else if !ok {
+		return fmt.Errorf("data is not correct")
+	}
+
+	return stub.PutState("chk"+stub.GetTxID(), check)
 }

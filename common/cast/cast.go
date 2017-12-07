@@ -17,6 +17,7 @@ func BytesToFloat64(in []byte) (float64, error) {
 	return ret, nil
 }
 
+// BytesToBool ...
 func BytesToBool(in []byte) (bool, error) {
 	if len(in) != 1 {
 		return false, fmt.Errorf("in length error: %d", len(in))
@@ -25,6 +26,7 @@ func BytesToBool(in []byte) (bool, error) {
 	return in[0] != 0, nil
 }
 
+// StringsToBytes ...
 func StringsToBytes(in ...string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	for _, x := range in {
@@ -66,6 +68,7 @@ func StringsToByteArray(args ...string) [][]byte {
 	return result
 }
 
+// ByteArrayToStrings ...
 func ByteArrayToStrings(in [][]byte) []string {
 	result := make([]string, len(in))
 	for i, x := range in {

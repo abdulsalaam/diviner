@@ -1,4 +1,4 @@
-package lmsr
+package market
 
 import "testing"
 
