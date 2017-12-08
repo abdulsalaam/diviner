@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	ccc "diviner/chaincode/common"
 	"diviner/common/csp"
-	pbl "diviner/protos/market"
+	pbmk "diviner/protos/market"
 	pbm "diviner/protos/member"
 
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -32,11 +33,11 @@ var (
 	outcomes = []string{"yes", "no"}
 	balance  = 10000.0
 	member   *pbm.Member
-	event    *pbl.Event
-	market1  *pbl.Market
-	market2  *pbl.Market
-	asset1   *pbl.Asset
-	asset2   *pbl.Asset
+	event    *pbmk.Event
+	market1  *pbmk.Market
+	market2  *pbmk.Market
+	asset1   *pbmk.Asset
+	asset2   *pbmk.Asset
 )
 
 func getOneKey(x map[string]float64) (string, bool) {
@@ -49,29 +50,30 @@ func getOneKey(x map[string]float64) (string, bool) {
 }
 
 func TestMain(m *testing.M) {
+	curr := time.Now()
 	priv, _ := csp.GeneratePrivateTempKey()
-	member, _ = pbm.NewMember(priv, balance)
-	event, _ = pbl.NewEvent(member.Id, title, outcomes[0], outcomes[1])
-	market1, _ = pbl.NewMarketWithFund(member.Id, event, 100.0)
-	market2, _ = pbl.NewMarketWithFund(member.Id, event, 200.0)
+	member, _ = pbm.NewMemberWithPrivateKey(priv, balance)
+	event, _ = pbmk.NewEvent(member.Address, title, curr.AddDate(1, 0, 0), outcomes[0], outcomes[1])
+	market1, _ = pbmk.NewMarketWithFund(member.Address, event, curr, curr.AddDate(1, 0, -1), 100.0)
+	market2, _ = pbmk.NewMarketWithFund(member.Address, event, curr, curr.AddDate(1, 0, -1), 200.0)
 
 	s1, _ := getOneKey(market1.Shares)
-	asset1, _ = pbl.NewAsset(member.Id, s1, 10)
+	asset1, _ = pbmk.NewAsset(member.Address, s1, 10)
 	s2, _ := getOneKey(market2.Shares)
-	asset2, _ = pbl.NewAsset(member.Id, s2, 20)
+	asset2, _ = pbmk.NewAsset(member.Address, s2, 20)
 
 	txid := uuid.New().String()
 	stub.MockTransactionStart(txid)
 
-	ccc.PutMessage(stub, member.Id, member)
+	ccc.PutMessage(stub, member.Address, member)
 
 	ccc.PutMessage(stub, event.Id, event)
 
-	eid, mid, _ := pbl.SepMarketID(market1.Id)
-	ccc.PutMessageWithCompositeKey(stub, market1, pbl.MarketKey, eid, mid)
+	eid, mid, _ := pbmk.SepMarketID(market1.Id)
+	ccc.PutMessageWithCompositeKey(stub, market1, pbmk.MarketKey, eid, mid)
 
-	eid, mid, _ = pbl.SepMarketID(market2.Id)
-	ccc.PutMessageWithCompositeKey(stub, market2, pbl.MarketKey, eid, mid)
+	eid, mid, _ = pbmk.SepMarketID(market2.Id)
+	ccc.PutMessageWithCompositeKey(stub, market2, pbmk.MarketKey, eid, mid)
 
 	if _, err := PutAsset(stub, asset1); err != nil {
 		fmt.Printf("put assert error: %v\n", asset1)
@@ -88,16 +90,16 @@ func TestMain(m *testing.M) {
 }
 
 func TestFindMember(t *testing.T) {
-	m, existed, err := GetMemberAndCheck(stub, member.Id)
+	m, existed, err := GetMemberAndCheck(stub, member.Address)
 	if err != nil {
-		t.Fatalf("get member (%s) failed: %v", member.Id, err)
+		t.Fatalf("get member (%s) failed: %v", member.Address, err)
 	}
 
 	if !existed {
-		t.Fatalf("must find an existed member (%s)", member.Id)
+		t.Fatalf("must find an existed member (%s)", member.Address)
 	}
 
-	if m.Id != member.Id || m.Balance != member.Balance || m.Address != member.Address {
+	if m.Balance != member.Balance || m.Address != member.Address {
 		t.Fatalf("data not match: %v, %v", m, member)
 	}
 
@@ -128,29 +130,30 @@ func TestFindMaket(t *testing.T) {
 		t.Fatal("data not found")
 	}
 
-	if !pbl.CmpMarket(m, market1) {
+	if m.String() != market1.String() {
 		t.Fatalf("market data not match: %v, %v", m, market1)
 	}
 }
 
 func TestPutAndFindMarket(t *testing.T) {
+	curr := time.Now()
 	txid := uuid.New().String()
 	stub.MockTransactionStart(txid)
 	defer stub.MockTransactionEnd(txid)
 
-	event1, _ := pbl.NewEvent(member.Id, "test", "a", "b")
-	m1, _ := pbl.NewMarketWithFund(member.Id, event1, 10.0)
+	event1, _ := pbmk.NewEvent(member.Address, "test", curr.AddDate(1, 0, 0), "a", "b")
+	m1, _ := pbmk.NewMarketWithFund(member.Address, event1, curr, curr.AddDate(1, 0, -1), 10.0)
 
 	bytes, err := PutMarket(stub, m1)
 	if err != nil {
 		t.Fatalf("put market failed: %v\n", err)
 	}
 
-	m2, _ := pbl.UnmarshalMarket(bytes)
+	m2, _ := pbmk.UnmarshalMarket(bytes)
 
 	m3, _, _ := GetMarketAndCheck(stub, m1.Id)
 
-	if !pbl.CmpMarket(m1, m2) || !pbl.CmpMarket(m1, m3) {
+	if m1.String() != m2.String() || m1.String() != m3.String() {
 		t.Fatalf("data not match: \n%v\n%v\n%v\n", m1, m2, m3)
 	}
 }
@@ -166,13 +169,11 @@ func TestFindAllMarket(t *testing.T) {
 	}
 
 	if len(lst.List) != 2 {
-		t.Fatal("length of list failed: %d", len(lst.List))
+		t.Fatalf("length of list failed: %d\n", len(lst.List))
 	}
 
-	if !(pbl.CmpMarket(market1, lst.List[0]) ||
-		pbl.CmpMarket(market1, lst.List[1]) ||
-		pbl.CmpMarket(market2, lst.List[0]) ||
-		pbl.CmpMarket(market2, lst.List[1])) {
+	if !(market1.String() == lst.List[0].String() || market1.String() == lst.List[1].String() ||
+		market2.String() == lst.List[0].String() || market2.String() == lst.List[1].String()) {
 		t.Fatal("data not match")
 	}
 
@@ -196,7 +197,7 @@ func TestGetAndFindAsset(t *testing.T) {
 		t.Fatal("data not match")
 	}
 
-	evt, mkt1, _ := pbl.SepMarketID(market1.Id)
+	evt, mkt1, _ := pbmk.SepMarketID(market1.Id)
 	ma1, err := FindAllAssets(stub, evt, mkt1)
 	if err != nil {
 		t.Fatalf("find assets for market failed: %v", err)
@@ -212,7 +213,7 @@ func TestGetAndFindAsset(t *testing.T) {
 
 	all, err := FindAllAssets(stub, event.Id)
 	if err != nil {
-		t.Fatal("find assets for event failed: %v", err)
+		t.Fatalf("find assets for event failed: %v\n", err)
 	}
 
 	if len(all.List) != 2 {

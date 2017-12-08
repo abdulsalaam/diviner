@@ -10,6 +10,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
+// GetMemberAndCheck ...
 func GetMemberAndCheck(stub shim.ChaincodeStubInterface, id string) (*pbm.Member, bool, error) {
 	bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 	if err != nil {
@@ -18,13 +19,15 @@ func GetMemberAndCheck(stub shim.ChaincodeStubInterface, id string) (*pbm.Member
 		return nil, false, nil
 	}
 
-	if x, err := pbm.Unmarshal(bytes); err != nil {
+	x, err := pbm.Unmarshal(bytes)
+	if err != nil {
 		return nil, false, err
-	} else {
-		return x, true, nil
 	}
+
+	return x, true, nil
 }
 
+// FindEvent ...
 func FindEvent(stub shim.ChaincodeStubInterface, id string) (*pbl.Event, error) {
 	if bytes, err := ccc.Find(stub, id); err != nil {
 		return nil, err
@@ -37,12 +40,12 @@ func FindEvent(stub shim.ChaincodeStubInterface, id string) (*pbl.Event, error) 
 
 // PutMarket ...
 func PutMarket(stub shim.ChaincodeStubInterface, market *pbl.Market) ([]byte, error) {
-	evtId, mktId, ok := pbl.SepMarketID(market.Id)
+	evtID, mktID, ok := pbl.SepMarketID(market.Id)
 	if !ok {
 		return nil, fmt.Errorf("market id format error: %s", market.Id)
 	}
 
-	return ccc.PutMessageWithCompositeKey(stub, market, pbl.MarketKey, evtId, mktId)
+	return ccc.PutMessageWithCompositeKey(stub, market, pbl.MarketKey, evtID, mktID)
 }
 
 // GetMarketAndCheck ...
@@ -64,11 +67,11 @@ func GetMarketAndCheck(stub shim.ChaincodeStubInterface, market string) (*pbl.Ma
 		return nil, false, fmt.Errorf("list content error")
 	}
 
-	if tmp, err := pbl.UnmarshalMarket(bytes); err != nil {
+	tmp, err := pbl.UnmarshalMarket(bytes)
+	if err != nil {
 		return nil, false, err
-	} else {
-		return tmp, true, nil
 	}
+	return tmp, true, nil
 }
 
 // FindAllMarkets ...
@@ -81,11 +84,11 @@ func FindAllMarkets(stub shim.ChaincodeStubInterface, event string) (*pbl.Market
 	var markets []*pbl.Market
 
 	for k, v := range result {
-		if m, err := pbl.UnmarshalMarket(v); err != nil {
+		m, err := pbl.UnmarshalMarket(v)
+		if err != nil {
 			return nil, fmt.Errorf("unmarshal market error at %s: %v", k, err)
-		} else {
-			markets = append(markets, m)
 		}
+		markets = append(markets, m)
 	}
 
 	return &pbl.Markets{
@@ -103,6 +106,7 @@ func PutAsset(stub shim.ChaincodeStubInterface, asset *pbl.Asset) ([]byte, error
 	return ccc.PutMessageWithCompositeKey(stub, asset, pbl.AssetKey, event, market, outcome, member)
 }
 
+// GetAssetAndCheck ...
 func GetAssetAndCheck(stub shim.ChaincodeStubInterface, asset string) (*pbl.Asset, bool, error) {
 	event, market, outcome, member, ok := pbl.SepAssetID(asset)
 	if !ok {
@@ -121,13 +125,15 @@ func GetAssetAndCheck(stub shim.ChaincodeStubInterface, asset string) (*pbl.Asse
 		return nil, false, fmt.Errorf("list content error")
 	}
 
-	if tmp, err := pbl.UnmarshalAsset(bytes); err != nil {
+	tmp, err := pbl.UnmarshalAsset(bytes)
+	if err != nil {
 		return nil, false, err
-	} else {
-		return tmp, true, nil
 	}
+
+	return tmp, true, nil
 }
 
+// FindAllAssets ...
 func FindAllAssets(stub shim.ChaincodeStubInterface, keys ...string) (*pbl.Assets, error) {
 	result, err := ccc.FindAllByPartialCompositeKey(stub, pbl.AssetKey, keys...)
 
@@ -138,11 +144,11 @@ func FindAllAssets(stub shim.ChaincodeStubInterface, keys ...string) (*pbl.Asset
 	var assets []*pbl.Asset
 
 	for k, v := range result {
-		if x, err := pbl.UnmarshalAsset(v); err != nil {
+		x, err := pbl.UnmarshalAsset(v)
+		if err != nil {
 			return nil, fmt.Errorf("unmarshal asset error at %s: %v", k, err)
-		} else {
-			assets = append(assets, x)
 		}
+		assets = append(assets, x)
 	}
 
 	return &pbl.Assets{
