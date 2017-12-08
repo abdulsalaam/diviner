@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	pbmk "diviner/protos/market"
+	pbm "diviner/protos/member"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -72,6 +73,15 @@ func (cc *eventCC) create(stub shim.ChaincodeStubInterface, event *pbmk.Event) p
 
 	if ccc.NotOK(&resp) {
 		return resp
+	}
+
+	member, err := pbm.Unmarshal(resp.Payload)
+	if err != nil {
+		return ccc.Errore(err)
+	}
+
+	if member.Blocked {
+		return ccc.NotAcceptable(member.Address)
 	}
 
 	event.Allowed = true

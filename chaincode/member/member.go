@@ -2,12 +2,12 @@ package member
 
 import (
 	"diviner/common/base58"
+	"diviner/common/cast"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 
 	ccc "diviner/chaincode/common"
 	ccu "diviner/chaincode/util"
-	pbc "diviner/protos/common"
 	pbm "diviner/protos/member"
 
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -102,63 +102,61 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	cmd := string(args[0])
 
-	var valid *pbc.Verification
-	var ok bool
-	var err error
-
 	if cmd == "query" || cmd == "register" || cmd == "transfer" {
 		if len != 3 {
 			return ccc.BadRequest("args len error: %d", len)
 		}
 
-		valid, ok, err = ccu.CheckAndPutVerfication(stub, args[1], args[2], cc.expired)
+		valid, ok, err := ccu.CheckAndPutVerfication(stub, args[1], args[2], cc.expired)
 		if err != nil {
 			return ccc.Errore(err)
 		} else if !ok {
 			return ccc.Unauthorized()
 		}
-	}
 
+		switch cmd {
+		case "query":
+			id := string(args[1])
+			me := base58.Encode(valid.PublicKey)
+
+			if id != me {
+				return ccc.Forbidden(me, id)
+			}
+
+			bytes, existed, err := ccc.GetStateAndCheck(stub, id)
+			if err != nil {
+				return ccc.Errore(err)
+			} else if !existed {
+				return ccc.NotFound(id)
+			}
+
+			if _, err := pbm.Unmarshal(bytes); err != nil {
+				return ccc.Errore(err)
+			}
+
+			return shim.Success(bytes)
+
+		case "register":
+			mem, err := pbm.Unmarshal(args[1])
+			if err != nil {
+				ccc.Errore(err)
+			}
+			return cc.register(stub, mem)
+
+		case "transfer":
+			tx, err := pbm.UnmarshalTransfer(args[1])
+			if err != nil {
+				return ccc.Errore(err)
+			}
+			from := base58.Encode(valid.PublicKey)
+
+			return cc.transfer(stub, tx, from)
+		} // switch cmd
+	} // if cmd == "query" || cmd == "register" || cmd == "transfer"
+
+	id := string(args[1])
 	switch cmd {
-	case "query":
-		id := string(args[1])
-		me := base58.Encode(valid.PublicKey)
-
-		if id != me {
-			return ccc.Forbidden(me, id)
-		}
-
-		bytes, existed, err := ccc.GetStateAndCheck(stub, id)
-		if err != nil {
-			return ccc.Errore(err)
-		} else if !existed {
-			return ccc.NotFound(id)
-		}
-
-		if _, err := pbm.Unmarshal(bytes); err != nil {
-			return ccc.Errore(err)
-		}
-
-		return shim.Success(bytes)
-
-	case "register":
-		mem, err := pbm.Unmarshal(args[1])
-		if err != nil {
-			ccc.Errore(err)
-		}
-		return cc.register(stub, mem)
-
-	case "transfer":
-		tx, err := pbm.UnmarshalTransfer(args[1])
-		if err != nil {
-			return ccc.Errore(err)
-		}
-		from := base58.Encode(valid.PublicKey)
-
-		return cc.transfer(stub, tx, from)
-
 	case "find":
-		id := string(args[1])
 		bytes, existed, err := ccc.GetStateAndCheck(stub, id)
 		if err != nil {
 			return ccc.Errore(err)
@@ -169,10 +167,47 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		if _, err := pbm.Unmarshal(bytes); err != nil {
 			return ccc.Errore(err)
 		}
-
 		return shim.Success(bytes)
+	case "block":
+		mem, existed, err := ccu.GetMemberAndCheck(stub, id)
+		if err != nil {
+			return ccc.Errore(err)
+		} else if !existed {
+			return ccc.NotFound(id)
+		}
+
+		mem.Blocked = true
+
+		return ccc.PutMessageAndReturn(stub, mem.Address, mem)
+
+	case "balance", "subsidy":
+		if len != 3 {
+			return ccc.BadRequest("args len error: %d", len)
+		}
+
+		amount, err := cast.BytesToFloat64(args[2])
+		if err != nil {
+			return ccc.BadRequest("amount error: %v", err)
+		}
+
+		mem, existed, err := ccu.GetMemberAndCheck(stub, id)
+		if err != nil {
+			return ccc.Errore(err)
+		} else if !existed {
+			return ccc.NotFound(id)
+		}
+
+		if mem.Blocked {
+			return ccc.NotAcceptable(mem.Address)
+		}
+
+		mem.Balance += amount
+		if cmd == "subsidy" {
+			mem.Subsidy += amount
+		}
+
+		return ccc.PutMessageAndReturn(stub, mem.Address, mem)
 	}
 
 	return ccc.NotImplemented(cmd)
 }
-

@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	ccc "diviner/chaincode/common"
+	ccu "diviner/chaincode/util"
+	"diviner/common/cast"
 	"diviner/common/csp"
 	pbc "diviner/protos/common"
 	pbm "diviner/protos/member"
@@ -67,7 +69,7 @@ func TestRegister(t *testing.T) {
 	m1 = tmp
 }
 
-func TestQuery(t *testing.T) {
+func TestQueryAndFind(t *testing.T) {
 
 	addr := []byte(m1.Address)
 	v, _ := pbc.NewVerification(priv1, addr)
@@ -75,10 +77,20 @@ func TestQuery(t *testing.T) {
 
 	resp := ccc.MockInvoke(stub, query, addr, bv)
 	if ccc.NotOK(&resp) {
-		t.Fatalf("query failed: %s", resp.Message)
+		t.Fatalf("query failed: %d, %s", resp.Status, resp.Message)
 	}
 
 	tmp, _ := pbm.Unmarshal(resp.Payload)
+	if tmp.String() != m1.String() {
+		t.Fatalf("data not match: %s, %s", tmp.String(), m1.String())
+	}
+
+	resp = ccc.MockInvoke(stub, []byte("find"), addr)
+	if ccc.NotOK(&resp) {
+		t.Fatalf("find failed: %d, %s", resp.Status, resp.Message)
+	}
+
+	tmp, _ = pbm.Unmarshal(resp.Payload)
 	if tmp.String() != m1.String() {
 		t.Fatalf("data not match: %s, %s", tmp.String(), m1.String())
 	}
@@ -89,6 +101,11 @@ func TestQuery(t *testing.T) {
 	resp = ccc.MockInvoke(stub, query, addr, bv)
 	if resp.Status != ccc.FORBIDDEN {
 		t.Fatalf("can not query others")
+	}
+
+	resp = ccc.MockInvoke(stub, []byte("find"), addr)
+	if resp.Status != ccc.NOTFOUND {
+		t.Fatalf("find non-existed member code failed: %d, %s", resp.Status, resp.Message)
 	}
 
 	addr = []byte(m2.Address)
@@ -144,7 +161,39 @@ func TestTransfer(t *testing.T) {
 	if m2.Balance != balance+amount {
 		t.Fatalf("target balance failed, must be %v, but %v", balance+amount, m2.Balance)
 	}
+}
 
+func TestBalanceAndSubsidy(t *testing.T) {
+	m1, _, _ = ccu.GetMemberAndCheck(stub, m1.Address)
+
+	old := m1.Balance
+	amount := 1000.0
+	amountBytes, _ := cast.ToBytes(amount)
+
+	resp := ccc.MockInvoke(stub, []byte("balance"), []byte(m1.Address), amountBytes)
+	if ccc.NotOK(&resp) {
+		t.Fatalf("update balance failed: %d, %s", resp.Status, resp.Message)
+	}
+
+	m1, _, _ = ccu.GetMemberAndCheck(stub, m1.Address)
+	if m1.Balance != (old + amount) {
+		t.Fatalf("member balace failed, must be %v, but %v", old+amount, m1.Balance)
+	}
+
+	old = m1.Balance
+	oldSubsidy := m1.Subsidy
+	resp = ccc.MockInvoke(stub, []byte("subsidy"), []byte(m1.Address), amountBytes)
+	if ccc.NotOK(&resp) {
+		t.Fatalf("subsidy failed: %d, %s", resp.Status, resp.Message)
+	}
+
+	m1, _, _ = ccu.GetMemberAndCheck(stub, m1.Address)
+	if m1.Balance != (old + amount) {
+		t.Fatalf("member balace failed, must be %v, but %v", old+amount, m1.Balance)
+	}
+	if m1.Subsidy != (oldSubsidy + amount) {
+		t.Fatalf("member subsidy failed, must be %v, but %v", oldSubsidy+amount, m1.Subsidy)
+	}
 }
 
 func TestMain(m *testing.M) {
