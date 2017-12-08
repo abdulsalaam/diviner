@@ -79,7 +79,6 @@ func (cc *eventCC) create(stub shim.ChaincodeStubInterface, event *pbmk.Event) p
 	event.Result = ""
 
 	return ccc.PutMessageAndReturn(stub, event.Id, event)
-
 }
 
 // Init ...
@@ -132,12 +131,5 @@ func (cc *eventCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 /*
-func main() {
-	logger.SetLevel(shim.LogDebug)
-	logger.Debug("start event chaincode")
-	err := shim.Start(NewEventChaincode())
-	if err != nil {
-		logger.Errorf("creating event chaincode failed: %v\n", err)
-	}
-}
-*/
+
+ */

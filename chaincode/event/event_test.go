@@ -110,6 +110,12 @@ func TestQuery(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	stub = ccc.NewMockStub("event", NewEventChaincode())
+	resp := ccc.MockInit(stub)
+	if ccc.NotOK(&resp) {
+		fmt.Printf("init event chaincode failed, %d, %s\n", resp.Status, resp.Message)
+		os.Exit(-1)
+	}
+
 	memStub = ccc.NewMockStub("member", member.NewMemberChaincode())
 	stub.MockPeerChaincode("member", memStub)
 
@@ -118,7 +124,7 @@ func TestMain(m *testing.M) {
 	b1, _ := pbm.Marshal(m1)
 	v1, _ := pbc.NewVerification(priv1, b1)
 	vb1, _ := pbc.Marshal(v1)
-	resp := ccc.MockInvoke(memStub, []byte("register"), b1, vb1)
+	resp = ccc.MockInvoke(memStub, []byte("register"), b1, vb1)
 	if ccc.NotOK(&resp) {
 		fmt.Println("create member failed")
 		os.Exit(-1)
