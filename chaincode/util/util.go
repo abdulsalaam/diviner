@@ -151,17 +151,21 @@ func FindAllAssets(stub shim.ChaincodeStubInterface, keys ...string) (*pbl.Asset
 }
 
 // CheckAndPutVerfication ...
-func CheckAndPutVerfication(stub shim.ChaincodeStubInterface, in, check []byte, expired int64) error {
+func CheckAndPutVerfication(stub shim.ChaincodeStubInterface, in, check []byte, expired int64) (*pbc.Verification, bool, error) {
 	v, err := pbc.Unmarshal(check)
 	if err != nil {
-		return err
+		return nil, false, err
 	}
 
 	if ok, err := pbc.Verify(v, in, expired); err != nil {
-		return err
+		return nil, false, err
 	} else if !ok {
-		return fmt.Errorf("data is not correct")
+		return nil, false, nil
 	}
 
-	return stub.PutState("chk"+stub.GetTxID(), check)
+	if err := stub.PutState("chk"+stub.GetTxID(), check); err != nil {
+		return v, false, err
+	}
+
+	return v, true, nil
 }

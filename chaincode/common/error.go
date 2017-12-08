@@ -12,6 +12,9 @@ const (
 	// BADREQUEST ...
 	BADREQUEST = shim.ERRORTHRESHOLD
 
+	// UNAUTHORIZED ...
+	UNAUTHORIZED = 401
+
 	// FORBIDDEN ...
 	FORBIDDEN = 403
 
@@ -23,6 +26,9 @@ const (
 
 	// NOTACCEPTABLE ...
 	NOTACCEPTABLE = 406
+
+	// CONFLICT ...
+	CONFLICT = 409
 
 	// INTERNALSERVERERROR ...
 	INTERNALSERVERERROR = shim.ERROR
@@ -56,6 +62,11 @@ func BadRequest(format string, a ...interface{}) pb.Response {
 	return Error(BADREQUEST, format, a...)
 }
 
+// Unauthorized ...
+func Unauthorized() pb.Response {
+	return Error(UNAUTHORIZED, "validation error")
+}
+
 // NotFound ...
 func NotFound(key string) pb.Response {
 	return Error(NOTFOUND, "key (%s) not found", key)
@@ -69,6 +80,11 @@ func Forbidden(a, b string) pb.Response {
 // NotAcceptable ...
 func NotAcceptable(key string) pb.Response {
 	return Error(NOTACCEPTABLE, "%s is not acceptable", key)
+}
+
+// Conflict ...
+func Conflict(key string) pb.Response {
+	return Error(CONFLICT, "%s has been existed", key)
 }
 
 // NotImplemented ...

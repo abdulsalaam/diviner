@@ -1,4 +1,4 @@
-package main
+package member
 
 import (
 	"diviner/common/base58"
@@ -12,6 +12,8 @@ import (
 
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
+
+var logger = shim.NewLogger("member")
 
 type memberCC struct {
 	expired int64
@@ -28,13 +30,6 @@ func NewMemberChaincode() shim.Chaincode {
 	}
 }
 
-var logger = shim.NewLogger("member")
-
-func (cc *memberCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Debug("init member chaincode")
-	return shim.Success(nil)
-}
-
 func (cc *memberCC) amount(in float64) float64 {
 	return in * (1.0 + cc.fee)
 }
@@ -44,7 +39,7 @@ func (cc *memberCC) register(stub shim.ChaincodeStubInterface, member *pbm.Membe
 	if err != nil {
 		return ccc.Errorf("get member address (%s) error: %v", member.Address, err)
 	} else if existed {
-		return ccc.NotFound(member.Address)
+		return ccc.Conflict(member.Address)
 	}
 
 	member = pbm.NewMember(member.Address, cc.balance)
@@ -90,25 +85,44 @@ func (cc *memberCC) transfer(stub shim.ChaincodeStubInterface, tx *pbm.Transfer,
 	return ccc.PutMessageAndReturn(stub, source.Address, source)
 }
 
+// Init ...
+func (cc *memberCC) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	logger.Debug("init member chaincode")
+	return shim.Success(nil)
+}
+
 // Invoke ...
 func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	args := stub.GetArgs()
 	len := len(args)
 
-	if len != 3 {
+	if len < 2 {
 		return ccc.BadRequest("args len error: %d", len)
 	}
 
 	cmd := string(args[0])
-	if err := ccu.CheckAndPutVerfication(stub, args[1], args[2], cc.expired); err != nil {
-		return ccc.Errore(err)
+
+	var valid *pbc.Verification
+	var ok bool
+	var err error
+
+	if cmd == "query" || cmd == "register" || cmd == "transfer" {
+		if len != 3 {
+			return ccc.BadRequest("args len error: %d", len)
+		}
+
+		valid, ok, err = ccu.CheckAndPutVerfication(stub, args[1], args[2], cc.expired)
+		if err != nil {
+			return ccc.Errore(err)
+		} else if !ok {
+			return ccc.Unauthorized()
+		}
 	}
 
 	switch cmd {
 	case "query":
 		id := string(args[1])
-		v, _ := pbc.Unmarshal(args[2])
-		me := base58.Encode(v.PublicKey)
+		me := base58.Encode(valid.PublicKey)
 
 		if id != me {
 			return ccc.Forbidden(me, id)
@@ -120,6 +134,11 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		} else if !existed {
 			return ccc.NotFound(id)
 		}
+
+		if _, err := pbm.Unmarshal(bytes); err != nil {
+			return ccc.Errore(err)
+		}
+
 		return shim.Success(bytes)
 
 	case "register":
@@ -134,20 +153,26 @@ func (cc *memberCC) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		if err != nil {
 			return ccc.Errore(err)
 		}
-		v, _ := pbc.Unmarshal(args[2])
-		from := base58.Encode(v.PublicKey)
+		from := base58.Encode(valid.PublicKey)
 
 		return cc.transfer(stub, tx, from)
+
+	case "find":
+		id := string(args[1])
+		bytes, existed, err := ccc.GetStateAndCheck(stub, id)
+		if err != nil {
+			return ccc.Errore(err)
+		} else if !existed {
+			return ccc.NotFound(id)
+		}
+
+		if _, err := pbm.Unmarshal(bytes); err != nil {
+			return ccc.Errore(err)
+		}
+
+		return shim.Success(bytes)
 	}
 
 	return ccc.NotImplemented(cmd)
 }
 
-func main() {
-	logger.SetLevel(shim.LogDebug)
-	logger.Debug("start member chaincode")
-	err := shim.Start(NewMemberChaincode())
-	if err != nil {
-		logger.Errorf("creating member chaincode failed: %v\n", err)
-	}
-}
