@@ -11,10 +11,6 @@ message Member {
   bool blocked = 5;
 }
 
-message MemberRegisterRequest {
-  string address = 1;
-}
-
 message Transfer {
   string target = 1;
   double amount = 2;

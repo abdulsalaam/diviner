@@ -88,7 +88,7 @@ func Verify(v *Verification, in []byte, expired int64) (bool, error) {
 	}
 
 	if util.CmpByteArray(hash, v.Hash) != 0 {
-		return false, errors.New("hash not match")
+		return false, errors.New("hash content not equal")
 	}
 
 	key, err := csp.ImportPubFromRaw(v.PublicKey)

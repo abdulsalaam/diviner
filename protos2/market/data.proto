@@ -25,6 +25,13 @@ message Events {
   repeated Event list = 1;
 }
 
+message EventCreateRequest {
+  string user = 1;
+  string title = 2;
+  repeated string outcome = 3;
+  google.protobuf.Timestamp end = 4;
+}
+
 /* Market */
 message Market {
   string id = 1;

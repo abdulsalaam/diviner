@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package common;
+
+import "google/protobuf/timestamp.proto";
+
+message Verification {
+  bytes public_key = 1;
+  bytes hash = 2;
+  bytes signature = 3;
+  google.protobuf.Timestamp time = 4;
+}
