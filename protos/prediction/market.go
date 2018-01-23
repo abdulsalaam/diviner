@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 // NewMarketCreateRequest ...
@@ -68,4 +70,22 @@ func CheckMarketCreateRequest(req *MarketCreateRequest) (bool, error) {
 	return true, nil
 }
 
+// UnmarshalMarketCreateRequest ...
+func UnmarshalMarketCreateRequest(data []byte) (*MarketCreateRequest, error) {
+	ret := new(MarketCreateRequest)
+	if err := proto.Unmarshal(data, ret); err != nil {
+		return nil, err
+	}
 
+	return ret, nil
+}
+
+// MarshalMarketCreateRequest ...
+func MarshalMarketCreateRequest(in *MarketCreateRequest) ([]byte, error) {
+	return proto.Marshal(in)
+}
+
+// InitMarket ...
+func InitMarket(user string, event *Event, start, end timestamp.Timestamp) (*Market, error) {
+	return nil, nil
+}

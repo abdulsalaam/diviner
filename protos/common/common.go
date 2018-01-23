@@ -27,7 +27,6 @@ func concate(in ...[]byte) []byte {
 		copy(tmp[idx:], x)
 		idx += len(x)
 	}
-
 	return tmp
 }
 
