@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package service;
 
-import "common/common.proto";
-import "member/member.proto";
-import "lmsr/data.proto";
+import "diviner/protos/common/common.proto";
+import "diviner/protos/member/member.proto";
+import "diviner/protos/lmsr/data.proto";
 import "google/protobuf/timestamp.proto";
 
 message QueryRequest {
